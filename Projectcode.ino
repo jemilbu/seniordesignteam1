@@ -138,3 +138,23 @@ void loop()
     Lights();
     TempCorrection();
 }
+
+
+/*
+Add task scheduler to code to allow for background processes
+GetTemp and TempCorrection to run every minute
+SetTempInput to only run on button press, clear after short button press or 5 second timeout
+SetLightColor to only run on long button press, clear after long button press or 5 second timout
+
+URL for article on task scheduling
+https://create.arduino.cc/projecthub/GadgetsToGrow/don-t-delay-use-an-arduino-task-scheduler-today-215cfe
+
+GitHub for task Scheduling
+https://github.com/gadgetstogrow/TaskScheduler
+
+Task Scheduler Original Code
+http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html
+
+Advanced Task Scheduler 
+https://github.com/arkhipenko/TaskScheduler
+*/
