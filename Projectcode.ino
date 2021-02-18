@@ -12,22 +12,6 @@ const int ThermoElec = 2;
 int SetTemp;
 int Ttherm;
 
-void setup()
-{
-    Serial.begin(115200);
-    pinMode(TempUp, INPUT);
-    pinMode(TempDown, INPUT);
-    pinMode(LightButton, INPUT);
-    pinMode(Light, OUTPUT);
-    ShowDisplay(SC_MAIN, "", "");
-}
-void loop()
-{
-    GetTemp(Ttherm);
-    SetTempInput(SetTemp);
-    Lights();
-    TempCorrection();
-}
 int GetTemp(int Ttherm)
 {
     int sensorvalue = analogRead(A0); //Read Pin A0
@@ -90,4 +74,20 @@ void ShowDisplay(screen val, String optionstate, String keypressed)
     oLCD.setFont(SmallFont);
     oLCD.print("Temp(F)",16,38);
     oLCD.print("Set Temp",90,38);
+}
+void setup()
+{
+    Serial.begin(115200);
+    pinMode(TempUp, INPUT);
+    pinMode(TempDown, INPUT);
+    pinMode(LightButton, INPUT);
+    pinMode(Light, OUTPUT);
+    ShowDisplay(SC_MAIN, "", "");
+}
+void loop()
+{
+    GetTemp(Ttherm);
+    SetTempInput(SetTemp);
+    Lights();
+    TempCorrection();
 }
