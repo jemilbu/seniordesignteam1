@@ -163,4 +163,7 @@ https://www.teachmemicro.com/arduino-pid-control-tutorial/
 
 PID Library
 https://github.com/ettoreleandrotognoli/ArcPID
+
+Interupts
+https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
 */
