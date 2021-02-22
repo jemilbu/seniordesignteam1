@@ -157,4 +157,10 @@ http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html
 
 Advanced Task Scheduler 
 https://github.com/arkhipenko/TaskScheduler
+
+PID Controller Example
+https://www.teachmemicro.com/arduino-pid-control-tutorial/
+
+PID Library
+https://github.com/ettoreleandrotognoli/ArcPID
 */
