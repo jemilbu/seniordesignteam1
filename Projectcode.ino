@@ -1,5 +1,5 @@
 #include "lcdhelper.h"
-#include "PID.h"
+#include "PID_v1.h"
 
 lcdhelper oLCD(ILI9163_4L, 3, 2, 9, 10, 7);
 
@@ -10,8 +10,16 @@ const int TempDown = 34;
 const int MainButton = 45;
 const int Light = 44;
 const int ThermoElec = 2;
-int SetTemp;
-int Ttherm;
+const int Thermistor = A0;
+int SetTemp, Ttherm;
+
+double consKp = 4.0;                                                     //  Tuning parameter for conservative Proportional Response
+double consKi = 4.0;                                                     //  Tuning parameter for conservative Integral Response
+double consKd = 4.0;                                                     //  Tuning parameter for conservative Derivative Response
+double aggKp = 3.0;                                                      //  Tuning parameter for aggressive Proportional Response
+double aggKi = 3.0;                                                      //  Tuning parameter for aggressive Integral Response
+double aggKd = 3.0;                                                      //  Tuning parameter for aggressive Derivative Response
+PID pid(&Ttherm, &ThermoElec, &SetTemp, consKp, consKi, consKd, DIRECT); //  PID control for temperature
 
 int currentStateUp;           //  State of push button 1
 int currentStateDown;         //  State of push button 2
@@ -30,20 +38,19 @@ int lastSteadyMain = HIGH;             //  previous steady state from input
 int lastFlickMain = HIGH;              //  previous flicker state from input
 unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 
-int GetTemp(int Ttherm)
+int GetTemp()
 {
-    int sensorvalue = analogRead(A0);              //Read Pin A0
-    double voltage = sensorvalue * (5.0 / 1023.0); //convert sensor value to voltage
-    double Rtherm = ((50 / voltage) - 10) * 1000;  //Calculates thermistor resistance in Ohm
-    Ttherm = 25;                                   //1/(0.001032+(0.0002387*log(Rtherm))+(0.000000158*(log(Rtherm)*log(Rtherm)*log(Rtherm))));//calculates associated temp in k
+    double sensorvalue = analogRead(Thermistor);                                                                     //Read Pin A0
+    double voltage = sensorvalue * (5.0 / 1023.0);                                                                   //convert sensor value to voltage
+    double Rtherm = ((50 / voltage) - 10) * 1000;                                                                    //Calculates thermistor resistance in Ohm
+    Ttherm = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
     oLCD.setFont(BigFont);
     oLCD.printNumI(Ttherm, 20, 55);
     return Ttherm;
-    delay(5000);
 }
-int SetTempInput(int SetTemp)
+int SetTempInput()
 {
-    // Taking the current state of the buttons 
+    // Taking the current state of the buttons
     currentStateUp = digitalRead(TempUp);
     currentStateDown = digitalRead(TempDown);
 
@@ -67,7 +74,7 @@ int SetTempInput(int SetTemp)
         //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
         if (currentStateDown != lastFlickDown)
         {
-            lastDebouneDown = millis();     //  reset the debounce timer
+            lastDebouneDown = millis();       //  reset the debounce timer
             lastFlickDown = currentStateDown; //  save the last flicker state
         }
         if ((millis() - lastDebouneDown) > debounceDelay)
@@ -82,7 +89,6 @@ int SetTempInput(int SetTemp)
     oLCD.setFont(BigFont);
     oLCD.printNumI(SetTemp, 100, 55);
     return SetTemp;
-    delay(50);
 }
 void MenuSelect()
 {
@@ -92,27 +98,28 @@ void MenuSelect()
 }
 void Lights()
 {
-    if (digitalRead(LightButton) == HIGH)
-    {
-        digitalWrite(Light, HIGH);
-        delay(300000);
-        digitalWrite(Light, LOW);
-
-        if (digitalRead(LightButton) == HIGH)
-        {
-            digitalWrite(Light, LOW);
-        }
+}
+bool TempCorrect()
+{
+    double gap = abs(SetTemp - Ttherm); //distance away from setpoint
+    if (gap < 10)
+    { //we're close to setpoint, use conservative tuning parameters
+        myPID.SetTunings(consKp, consKi, consKd);
     }
     else
-        ;
-}
-void TempCorrection()
-{
-    int GetThisValue;
-    if (GetTemp(Ttherm) - SetTempInput(SetTemp) > 5 or GetTemp(Ttherm) - SetTempInput(SetTemp) < -5)
     {
-        analogWrite(ThermoElec, GetThisValue); //PWM duty cycle, 255 is max. will need to test this on thermoelectric
+        //we're far from setpoint, use aggressive tuning parameters
+        myPID.SetTunings(aggKp, aggKi, aggKd);
     }
+    if (myPID.Compute() == true)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+    
 }
 void ShowDisplay(screen val, String optionstate, String keypressed)
 {
@@ -123,23 +130,21 @@ void ShowDisplay(screen val, String optionstate, String keypressed)
     oLCD.print("Temp(F)", 16, 38);
     oLCD.print("Set Temp", 90, 38);
 }
-void setup()
+void SegDisp() void setup()
 {
     Serial.begin(115200);
     pinMode(TempUp, INPUT);
     pinMode(TempDown, INPUT);
-    pinMode(LightButton, INPUT);
+    pinMode(MainButton, INPUT);
     pinMode(Light, OUTPUT);
+    pid.SetMode(AUTOMATIC);
     ShowDisplay(SC_MAIN, "", "");
 }
 void loop()
 {
-    GetTemp(Ttherm);
-    SetTempInput(SetTemp);
     Lights();
-    TempCorrection();
+    TempCorrect();
 }
-
 
 /*
 Add task scheduler to code to allow for background processes
@@ -158,12 +163,6 @@ http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html
 
 Advanced Task Scheduler 
 https://github.com/arkhipenko/TaskScheduler
-
-PID Controller Example
-https://www.teachmemicro.com/arduino-pid-control-tutorial/
-
-PID Library
-https://github.com/ettoreleandrotognoli/ArcPID
 
 Interupts
 https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
