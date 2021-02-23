@@ -1,4 +1,5 @@
 #include "lcdhelper.h"
+#include "PID.h"
 
 lcdhelper oLCD(ILI9163_4L, 3, 2, 9, 10, 7);
 
