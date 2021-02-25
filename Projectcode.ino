@@ -270,3 +270,13 @@ https://github.com/arkhipenko/TaskScheduler
 Interupts
 https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
 */
+
+/* LED Colors
+                R   G   B
+Red             255 0   0
+Red-Violet      129 40  144
+Purple          128 0   128
+Blue            0   0   255
+Blue-Green      0   115 54
+Green           0   255 0
+*/
