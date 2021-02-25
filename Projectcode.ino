@@ -1,24 +1,26 @@
 #include "lcdhelper.h"
 #include "PID_v1.h"
+#include <EEPROM.h>
+
+// 7 segment library
+// LED library?
 
 lcdhelper oLCD(ILI9163_4L, 3, 2, 9, 10, 7);
 
 void ShowDisplay(screen val, String optionstate, String keypressed);
 
-const int TempUp = 30;
-const int TempDown = 34;
-const int MainButton = 45;
-const int Light = 44;
-const int ThermoElec = 2;
-const int Thermistor = A0;
-int SetTemp, Ttherm;
+const int buttonUp = 30, buttonDown = 34, MainButton = 45; // Button Pins
+const int ledR = 44, ledB = 49, ledG = 60; // LED Pins
+const int ThermoElec = 2, Thermistor = A0;  // Thermoelectric and Thermistor Pins
+int SetTemp, Ttherm, LightMode;    //  Global Set Temperature, Thermistor Temp and Light Mode
 
-double consKp = 4.0;                                                     //  Tuning parameter for conservative Proportional Response
-double consKi = 4.0;                                                     //  Tuning parameter for conservative Integral Response
-double consKd = 4.0;                                                     //  Tuning parameter for conservative Derivative Response
-double aggKp = 3.0;                                                      //  Tuning parameter for aggressive Proportional Response
-double aggKi = 3.0;                                                      //  Tuning parameter for aggressive Integral Response
-double aggKd = 3.0;                                                      //  Tuning parameter for aggressive Derivative Response
+double consKp = 1.0;  //  Tuning parameter for conservative Proportional Response
+double consKi = 0.05; //  Tuning parameter for conservative Integral Response
+double consKd = 0.25; //  Tuning parameter for conservative Derivative Response
+double aggKp = 4.0;   //  Tuning parameter for aggressive Proportional Response
+double aggKi = 0.2;   //  Tuning parameter for aggressive Integral Response
+double aggKd = 1.0;   //  Tuning parameter for aggressive Derivative Response
+
 PID pid(&Ttherm, &ThermoElec, &SetTemp, consKp, consKi, consKd, DIRECT); //  PID control for temperature
 
 int currentStateUp;           //  State of push button 1
@@ -38,6 +40,8 @@ int lastSteadyMain = HIGH;             //  previous steady state from input
 int lastFlickMain = HIGH;              //  previous flicker state from input
 unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 
+unsigned long previousMillisMain = 0; // Stores the main was pressed
+
 int GetTemp()
 {
     double sensorvalue = analogRead(Thermistor);                                                                     //Read Pin A0
@@ -50,9 +54,14 @@ int GetTemp()
 }
 int SetTempInput()
 {
+    // Blink 7 segment
+
+    // While loop this until main button is pressed, store to EEprom once complete
+        // Make sure to put a counter on eeprom to prevent overwrite
+    
     // Taking the current state of the buttons
-    currentStateUp = digitalRead(TempUp);
-    currentStateDown = digitalRead(TempDown);
+    currentStateUp = digitalRead(buttonUp);
+    currentStateDown = digitalRead(buttonDown);
 
     // If Up button depressed
     if (currentStateUp == HIGH)
@@ -65,7 +74,15 @@ int SetTempInput()
         }
         if ((millis() - lastDebouneUp) > debounceDelay)
         {
-            SetTemp += 1;
+            // Checking if SetTemp is in the useful range, changing if it is
+            if (SetTemp != 165)
+            {
+                SetTemp += 1;
+            }
+            else
+            {
+                SetTemp = SetTemp;
+            }
         }
     }
     // If Down button depressed
@@ -79,7 +96,15 @@ int SetTempInput()
         }
         if ((millis() - lastDebouneDown) > debounceDelay)
         {
-            SetTemp -= 1;
+            // Checking if SetTemp is in the useful range, changing if it is
+            if (SetTemp != 32)
+            {
+                SetTemp -= 1;
+            }
+            else
+            {
+                SetTemp = SetTemp;
+            }
         }
     }
     else
@@ -93,14 +118,85 @@ int SetTempInput()
 void MenuSelect()
 {
     //debounce delay
+
+    unsigned long startMillisMain = millis(); //  Storing the current time
+    unsigned long endMillisMain;
+    while (digitalRead(MainButton) == HIGH) //  Loop until the main button goes low
+    {
+        endMillisMain = millis(); //  Read the current time
+    }
+
     //if main button pressed for less than one second, go to temp
     //if main button pressed for more than one second and up to five, go to lights
+    if ((endMillisMain - startMillisMain) <= 2000)
+    {
+        SetTempInput();
+    }
+    else
+    {
+        SetLights();
+    }
 }
-void Lights()
+void SetLights()
 {
+    // Blink 7 segment
+
+    //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
+    
+    // Taking the current state of the buttons
+    currentStateUp = digitalRead(buttonUp);
+    currentStateDown = digitalRead(buttonDown);
+
+    // If Up button depressed
+    if (currentStateUp == HIGH)
+    {
+        //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+        if (currentStateUp != lastFlickUp)
+        {
+            lastDebouneUp = millis();     //  reset the debounce timer
+            lastFlickUp = currentStateUp; //  save the last flicker state
+        }
+        if ((millis() - lastDebouneUp) > debounceDelay)
+        {
+            if (LightMode != 12)
+            {
+                LightMode += 1;
+            }
+            else
+            {
+                LightMode = LightMode;
+            }
+        }
+    }
+    // If Down button depressed
+    if (currentStateDown == HIGH)
+    {
+        //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+        if (currentStateDown != lastFlickDown)
+        {
+            lastDebouneDown = millis();       //  reset the debounce timer
+            lastFlickDown = currentStateDown; //  save the last flicker state
+        }
+        if ((millis() - lastDebouneDown) > debounceDelay)
+        {
+            if (LightMode != 1)
+            {
+                LightMode -= 1;
+            }
+            else
+            {
+                LightMode = LightMode;
+            }
+        }
+    }
+    else
+    {
+        LightMode = LightMode;
+    }
 }
 bool TempCorrect()
 {
+    GetTemp();
     double gap = abs(SetTemp - Ttherm); //distance away from setpoint
     if (gap < 10)
     { //we're close to setpoint, use conservative tuning parameters
@@ -119,7 +215,6 @@ bool TempCorrect()
     {
         return false;
     }
-    
 }
 void ShowDisplay(screen val, String optionstate, String keypressed)
 {
@@ -130,20 +225,28 @@ void ShowDisplay(screen val, String optionstate, String keypressed)
     oLCD.print("Temp(F)", 16, 38);
     oLCD.print("Set Temp", 90, 38);
 }
-void SegDisp() void setup()
+void SegDisp()
+{
+    // Conrol of the 7 segment will go here
+}
+void setup()
 {
     Serial.begin(115200);
-    pinMode(TempUp, INPUT);
-    pinMode(TempDown, INPUT);
+    pinMode(buttonUp, INPUT);
+    pinMode(buttonDown, INPUT);
     pinMode(MainButton, INPUT);
     pinMode(Light, OUTPUT);
+    pinMode(Thermistor, INPUT);
     pid.SetMode(AUTOMATIC);
     ShowDisplay(SC_MAIN, "", "");
+
+    // EEProm set temp
 }
 void loop()
 {
-    Lights();
+    // currentMillis = millis();
     TempCorrect();
+    attachInterrupt(digitalPinToInterrupt(MainButton), MenuSelect(), RISING); // If menu button is constant on, change to falling or change
 }
 
 /*
