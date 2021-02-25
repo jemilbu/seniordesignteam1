@@ -1,5 +1,4 @@
 #include "lcdhelper.h"
-#include "PID_v1.h"
 #include <EEPROM.h>
 
 // 7 segment library
@@ -197,24 +196,7 @@ void SetLights()
 bool TempCorrect()
 {
     GetTemp();
-    double gap = abs(SetTemp - Ttherm); //distance away from setpoint
-    if (gap < 10)
-    { //we're close to setpoint, use conservative tuning parameters
-        myPID.SetTunings(consKp, consKi, consKd);
-    }
-    else
-    {
-        //we're far from setpoint, use aggressive tuning parameters
-        myPID.SetTunings(aggKp, aggKi, aggKd);
-    }
-    if (myPID.Compute() == true)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    
 }
 void ShowDisplay(screen val, String optionstate, String keypressed)
 {
@@ -237,7 +219,6 @@ void setup()
     pinMode(MainButton, INPUT);
     pinMode(Light, OUTPUT);
     pinMode(Thermistor, INPUT);
-    pid.SetMode(AUTOMATIC);
     ShowDisplay(SC_MAIN, "", "");
 
     // EEProm set temp
