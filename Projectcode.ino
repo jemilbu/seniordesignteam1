@@ -1,17 +1,18 @@
-//#include "lcdhelper.h"
 //#include <EEPROM.h>
+#include "SevSeg.h"
+#include "RGBLed.h"
 
-// 7 segment library
-// LED library?
+// Button Pins
+const int buttonUp = 40, buttonDown = 42, MainButton = 37;
+// LED Pins
+const int ledR = 44, ledB = 49, ledG = 60;
+// Thermoelectric and Thermistor Pins                            //  CHANGE TO MATCH MOTOR DRIVER OUTPUTS
+const int ThermoElec = 30, Thermistor = A0;
+//  Global Set Temperature, Thermistor Temp and Light Mode
+int SetTemp, Ttherm, LightMode;
 
-// lcdhelper oLCD(ILI9163_4L, 3, 2, 9, 10, 7);
-
-// void ShowDisplay(screen val, String optionstate, String keypressed);
-
-const int buttonUp = 40, buttonDown = 42, MainButton = 37; // Button Pins
-const int ledR = 44, ledB = 49, ledG = 60;                 // LED Pins
-const int ThermoElec = 30, Thermistor = A0;                // Thermoelectric (make sure PWM) and Thermistor Pins
-int SetTemp, Ttherm, LightMode;                            //  Global Set Temperature, Thermistor Temp and Light Mode
+//  Thermoelectric Motor Driver pins
+const int speed = , direct = ;
 
 int currentStateUp;          //  State of push button 1
 int currentStateDown;        //  State of push button 2
@@ -32,6 +33,12 @@ unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 
 unsigned long previousMillisMain = 0; // Stores the main was pressed
 
+//  Create an instance of the 7 segment object
+SevSeg disp;
+
+//  Create an instance of the RGB object
+RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
+
 int GetTemp()
 {
     double sensorvalue = analogRead(Thermistor);                                                                           //Read Pin A0
@@ -39,8 +46,7 @@ int GetTemp()
     double Rtherm = ((50 / voltage) - 10) * 1000;                                                                          //Calculates thermistor resistance in Ohm
     double tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
     Ttherm = tempK - 273.15;
-    // oLCD.setFont(BigFont);
-    // oLCD.printNumI(Ttherm, 20, 55);
+    // Print temp to screen here
     return Ttherm;
 }
 int SetTempInput()
@@ -106,8 +112,6 @@ int SetTempInput()
         {
             SetTemp = SetTemp;
         }
-        // oLCD.setFont(BigFont);
-        // oLCD.printNumI(SetTemp, 100, 55);
         delay(250);
     }
     return SetTemp;
@@ -130,11 +134,17 @@ void MenuSelect()
         Serial.println("Set Temp");
         SetTempInput();
     }
-    else
+    else if ((endMillisMain - startMillisMain) <= 5000 && (endMillisMain - startMillisMain) > 2000)
     {
         Serial.println("Set Lights");
         SetLights();
     }
+    else
+    {
+        Serial.print("Set Units");
+        SetUnits();
+    }
+    
     return;
 }
 void SetLights()
@@ -200,6 +210,10 @@ void SetLights()
     }
     return;
 }
+void SetUnits()
+{
+    
+}
 bool TempCorrect()
 {
     GetTemp();
@@ -216,15 +230,6 @@ bool TempCorrect()
         Serial.println(Ttherm);
     }
 }
-// void ShowDisplay(screen val, String optionstate, String keypressed)
-// {
-//     oLCD.LCDInitialize(LANDSCAPE);
-//     oLCD.drawRoundRect(18, 53, 52, 71);
-//     oLCD.drawRoundRect(98, 53, 134, 71);
-//     oLCD.setFont(SmallFont);
-//     oLCD.print("Temp(F)", 16, 38);
-//     oLCD.print("Set Temp", 90, 38);
-// }
 void SegDisp()
 {
     // Conrol of the 7 segment will go here
@@ -240,7 +245,19 @@ void setup()
     pinMode(ledR, OUTPUT);
     pinMode(ledB, OUTPUT);
     pinMode(ledG, OUTPUT);
-    // ShowDisplay(SC_MAIN, "", "");
+    pinMode(speed, OUTPUT);
+    pinMode(direct, OUTPUT);
+
+    //  Digit Pins for 7 segment
+    const int dig1 =, dig2 =, dig3 =, dig4 = ;
+    //  Segment Pins for 7 segment
+    const int segA =, segB =, segC =, segD =, segE =, segF =, segG = ;
+    //  Common Cathode/Anode
+    int digits = 4;
+
+    disp.Begin(COMMON_CATHODE,digits,dig1,dig2,dig3,dig4,segA,segB,segC,segD,segE,segF,segG);
+
+    disp.SetBrightness(100);
 
     //attachInterrupt(digitalPinToInterrupt(MainButton), MenuSelect, RISING); // If menu button is constant on, change to falling or change
 
@@ -248,7 +265,6 @@ void setup()
 }
 void loop()
 {
-    unsigned long currentMillis = millis();
     TempCorrect();
     if (digitalRead(MainButton) == HIGH)
     {
@@ -277,14 +293,4 @@ https://github.com/arkhipenko/TaskScheduler
 
 Interupts
 https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
-*/
-
-/* LED Colors
-                R   G   B
-Red             255 0   0
-Red-Violet      129 40  144
-Purple          128 0   128
-Blue            0   0   255
-Blue-Green      0   115 54
-Green           0   255 0
 */
