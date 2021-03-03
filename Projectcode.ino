@@ -293,4 +293,16 @@ https://github.com/arkhipenko/TaskScheduler
 
 Interupts
 https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
+
+7 Seg
+https://github.com/sparkfun/SevSeg
+
+RGB LED
+https://github.com/wilmouths/RGBLed
+
+Motor Driver
+https://www.pololu.com/product-info-merged/2960
+
+Disp
+https://docs.broadcom.com/doc/AV02-0568EN
 */
