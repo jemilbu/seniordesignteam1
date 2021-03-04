@@ -12,8 +12,8 @@
 
 #include <avr/pgmspace.h>
 
-#define COMMON_CATHODE 0
-#define COMMON_ANODE 1
+const int COMMON_CATHODE_7 = 0;
+const int COMMON_ANODE_7 = 1;
 
 #define BLANK 16 //Special character that turns off all segments (we chose 16 as it is the first spot that has this)
 
@@ -159,6 +159,7 @@ const uint8_t characterArray[] PROGMEM = {
   0b0000000, // 125 ','  NO DISPLAY
   0b0000000, // 126 '~'  NO DISPLAY
   0b0000000, // 127 'DEL'  NO DISPLAY
+  0b1100011, // 128 '°' 
 };
 
 

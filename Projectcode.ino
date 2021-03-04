@@ -3,7 +3,7 @@
 #include "RGBLed.h"
 
 // Button Pins
-const int buttonUp = 40, buttonDown = 42, MainButton = 37;
+const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
 const int ledR = 44, ledB = 49, ledG = 60;
 // Thermoelectric and Thermistor Pins                            //  CHANGE TO MATCH MOTOR DRIVER OUTPUTS
@@ -12,7 +12,7 @@ const int ThermoElec = 30, Thermistor = A0;
 int SetTemp, Ttherm, LightMode;
 
 //  Thermoelectric Motor Driver pins
-const int speed = , direct = ;
+const int speed = 0, direct = 0;
 
 int currentStateUp;          //  State of push button 1
 int currentStateDown;        //  State of push button 2
@@ -47,6 +47,7 @@ int GetTemp()
     double tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
     Ttherm = tempK - 273.15;
     // Print temp to screen here
+    disp.DisplayString("25°C",0);
     return Ttherm;
 }
 int SetTempInput()
@@ -249,15 +250,15 @@ void setup()
     pinMode(direct, OUTPUT);
 
     //  Digit Pins for 7 segment
-    const int dig1 =, dig2 =, dig3 =, dig4 = ;
+    const int dig1 = 23, dig2 = 25, dig3 = 27, dig4 = 29;
     //  Segment Pins for 7 segment
-    const int segA =, segB =, segC =, segD =, segE =, segF =, segG = ;
+    const int segA = 31, segB = 33, segC = 35, segD = 37, segE = 39, segF = 41, segG = 43;
     //  Common Cathode/Anode
     int digits = 4;
 
-    disp.Begin(COMMON_CATHODE,digits,dig1,dig2,dig3,dig4,segA,segB,segC,segD,segE,segF,segG);
+    disp.Begin(COMMON_CATHODE_7,digits,dig1,dig2,dig3,dig4,segA,segB,segC,segD,segE,segF,segG,53);
 
-    disp.SetBrightness(100);
+    disp.SetBrightness(50);
 
     //attachInterrupt(digitalPinToInterrupt(MainButton), MenuSelect, RISING); // If menu button is constant on, change to falling or change
 
@@ -270,7 +271,7 @@ void loop()
     {
         MenuSelect();
     }
-    delay(500);
+    delay(1000);
 }
 
 /*

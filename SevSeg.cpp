@@ -95,7 +95,7 @@ void SevSeg::Begin(boolean mode_in, byte numOfDigits,
 	//Assign input values to variables
 	//mode is what the digit pins must be set at for it to be turned on. 0 for common cathode, 1 for common anode
 	mode = mode_in;
-	if (mode == COMMON_ANODE)
+	if (mode == COMMON_ANODE_7)
 	{
 		DigitOn = HIGH;
 		DigitOff = LOW;
