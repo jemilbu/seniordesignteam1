@@ -215,37 +215,96 @@ void SevSeg::DisplayString(const char *toDisplay, byte DecAposColon)
 		if (characterToDisplay & 0x80) // bit 7 enables bit-per-segment control
 		{							   // Each bit of characterToDisplay turns on a single segment (from A-to-G)
 			if (characterToDisplay & 0x01)
+			{
 				digitalWrite(segmentA, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentA, SegOff);
+			}
+
 			if (characterToDisplay & 0x02)
+			{
 				digitalWrite(segmentB, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentB, SegOff);
+			}
 			if (characterToDisplay & 0x04)
+			{
 				digitalWrite(segmentC, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentB, SegOff);
+			}
+
 			if (characterToDisplay & 0x08)
+			{
 				digitalWrite(segmentD, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentD, SegOff);
+			}
 			if (characterToDisplay & 0x10)
+			{
 				digitalWrite(segmentE, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentE, SegOff);
+			}
 			if (characterToDisplay & 0x20)
+			{
 				digitalWrite(segmentF, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentF, SegOff);
+			}
 			if (characterToDisplay & 0x40)
+			{
 				digitalWrite(segmentG, SegOn);
+			}
+			else
+			{
+				digitalWrite(segmentG, SegOff);
+			}
+			
 		}
 		else
 		{
 			const uint8_t chr = pgm_read_byte(&characterArray[characterToDisplay]);
 			if (chr & (1 << 6))
 				digitalWrite(segmentA, SegOn);
+			else
+				digitalWrite(segmentA, SegOff);
 			if (chr & (1 << 5))
 				digitalWrite(segmentB, SegOn);
+			else
+				digitalWrite(segmentB, SegOff);
 			if (chr & (1 << 4))
 				digitalWrite(segmentC, SegOn);
+			else
+				digitalWrite(segmentC, SegOff);
 			if (chr & (1 << 3))
 				digitalWrite(segmentD, SegOn);
+			else
+				digitalWrite(segmentD, SegOff);
 			if (chr & (1 << 2))
 				digitalWrite(segmentE, SegOn);
+			else
+				digitalWrite(segmentE, SegOff);
 			if (chr & (1 << 1))
 				digitalWrite(segmentF, SegOn);
+			else
+				digitalWrite(segmentF, SegOff);
 			if (chr & (1 << 0))
 				digitalWrite(segmentG, SegOn);
+			else
+				digitalWrite(segmentG, SegOff);
 		}
 		//Service the decimal point, apostrophe and colon
 		if ((DecAposColon & (1 << (digit - 1))) && (digit < 5)) //Test DecAposColon to see if we need to turn on a decimal point
@@ -318,21 +377,21 @@ void SevSeg::DisplayString(const char *toDisplay, byte DecAposColon)
 //  7-23-2012
 //  Spark Fun Electronics
 //  Nathan Seidle
- 
+
 //  This code is originally based Dean Reading's Library deanreading@hotmail.com
 //  http://arduino.cc/playground/Main/SevenSegmentLibrary
-//  He didn't have a license on it so I hope he doesn't mind me making it public domain: 
+//  He didn't have a license on it so I hope he doesn't mind me making it public domain:
 //  This code is public domain but you buy me a beer if you use this and we meet someday (Beerware license).
- 
+
 //  This example is a centi-second counter to demonstrate the use of the SevSeg library. To light
 //  the display you have to call myDisplay.DisplayNumber(#, decimalPlace) multiple times a second. Put this
 //  in the main loop.
- 
+
 //  SparkFun has a large, 1" 7-segment display that has four digits.
 //  https://www.sparkfun.com/products/11408
-//  Looking at the display like this: 8.8.8.8. pin 1 is on the lower row, starting from the left. 
+//  Looking at the display like this: 8.8.8.8. pin 1 is on the lower row, starting from the left.
 //  Pin 12 is the top row, upper left pin.
- 
+
 //  Pinout:
 //  1: Segment E
 //  2: Segment D
@@ -346,16 +405,16 @@ void SevSeg::DisplayString(const char *toDisplay, byte DecAposColon)
 //  10: Segment F
 //  11: Segment A
 //  12: Digit 1
- 
+
 //  ToDo:
 //  Picture of setup with pin 1 indicator
 //  Covert big byte array to binary: http://arduino.cc/forum/index.php/topic,39760.0.html
 //  Measure current going through limiting resistors to make sure we're getting 20mA per segment per digit (should be 80mA for four digits)
- 
+
 //  2264 bytes
 //  2134 bytes with new BigTime functions
 //  2214 if full DP support
- 
+
 //  */
 
 // #include "SevSeg.h"
@@ -379,7 +438,7 @@ void SevSeg::DisplayString(const char *toDisplay, byte DecAposColon)
 //    int digit2 = 3; //Pin 9 on my 4 digit display
 //    int digit3 = 4; //Pin 8 on my 4 digit display
 //    int digit4 = 5; //Pin 6 on my 4 digit display
-   
+
 //    //Declare what pins are connected to the segments
 //    int segA = 6; //Pin 11 on my 4 digit display
 //    int segB = 7; //Pin 7 on my 4 digit display
