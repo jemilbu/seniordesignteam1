@@ -11,18 +11,21 @@ const int ThermoElecLED = 30;
 // Thermoelectric Control Pins
 const int ThermoElecA = 45, ThermoElecB = 46, savePower = 69;
 // Thermistor Pins
-const int Thermistor1 = A0;
-Thermistor2 = A1;
+const int Thermistor1 = A0, Thermistor2 = A1;
 //  Global Set Temperature, Thermistor Temp and Light Mode
-volatile double SetTemp, TthermAvg, LightMode, UnitsMode;
+volatile double SetTempC = 0, SetTempF = 32;
+// Global Light and Units Mode
+volatile int LightMode, UnitsMode = 1;
+// Menu flag
+bool MenuFlag = 0;
 
 //  Thermoelectric Motor Driver pins
 const int speed = 0, direct = 0;
 
-int currentStateUp;          //  State of push button 1
-int currentStateDown;        //  State of push button 2
-int currentStateMain;        //  State of push button 3
-const int debounceDelay = 2; //  Debounce time; increase if output flickers
+int currentStateUp;               //  State of push button 1
+int currentStateDown;             //  State of push button 2
+int currentStateMain;             //  State of push button 3
+const double debounceDelay = 0.5; //  Debounce time; increase if output flickers
 
 int lastSteadyUp = HIGH;             //  previous steady state from input
 int lastFlickUp = HIGH;              //  previous flicker state from input
@@ -57,7 +60,7 @@ int GetTemp()
     double tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
     double Ttherm2 = tempK2 - 273.15;
 
-    TthermAvg = (Ttherm1 + Ttherm2) / 2.0
+    double TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
 
     // Print temp to screen here
     //  disp.DisplayString("25°C",0);
@@ -66,32 +69,34 @@ int GetTemp()
     // If display is in Farenheit
     if (UnitsMode == 2)
     {
-        double TthermF = (TthermAvg * (9.0/5.0)) + 32.0;
-        Serial.println(TthermF);
-        Serial.print("°F");
+        double TthermF = (TthermAvg * (9.0 / 5.0)) + 32.0;
+        Serial.print(TthermF);
+        Serial.println("°F");
+        return TthermF;
     }
-    else
+    else if (UnitsMode == 1)
     {
-        Serial.println(TthermAvg);
-        Serial.print("°C");
+        Serial.print(TthermAvg);
+        Serial.println("°C");
+        return TthermAvg;
     }
-    return TthermAvg;
 }
-int SetTempInput()
+void SetTempInput()
 {
+    delay(500);
     // Blink 7 segment
-    Serial.println("Setting Temp");
+
     // While loop this until main button is pressed, store to EEprom once complete
     // Make sure to put a counter on eeprom to prevent overwrite
     delay(1000);
-    while (digitalRead(MainButton) == LOW)
+    while (digitalRead(MainButton) == HIGH)
     {
         // Taking the current state of the buttons
         currentStateUp = digitalRead(buttonUp);
         currentStateDown = digitalRead(buttonDown);
 
         // If Up button depressed
-        if (currentStateUp == HIGH)
+        if (currentStateUp == LOW)
         {
             //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
             if (currentStateUp != lastFlickUp)
@@ -101,50 +106,66 @@ int SetTempInput()
             }
             if ((millis() - lastDebouneUp) > debounceDelay)
             {
-                // Checking if SetTemp is in the useful range, changing if it is
-                if (SetTemp != 80) // 80 Celcius
+                if (UnitsMode == 1)
                 {
-                    SetTemp += 1;
-                    Serial.println(SetTemp);
+                    // Checking if SetTemp is in the useful range, changing if it is
+                    if (SetTempC != 80) // Celcius
+                    {
+                        SetTempC += 1;
+                        Serial.println(SetTempC, 0);
+                    }
+                }
+                else if (UnitsMode == 2)
+                {
+                    // Checking if SetTemp is in the useful range, changing if it is
+                    if (SetTempF != 176) // Farenheit
+                    {
+                        SetTempF += 1;
+                        Serial.println(SetTempF, 0);
+                    }
                 }
             }
         }
         // If Down button depressed
-        if (currentStateDown == HIGH)
+        if (currentStateDown == LOW)
         {
-            //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
-            if (currentStateDown != lastFlickDown)
-            {
-                lastDebouneDown = millis();       //  reset the debounce timer
-                lastFlickDown = currentStateDown; //  save the last flicker state
-            }
-            if ((millis() - lastDebouneDown) > debounceDelay)
+            if (UnitsMode == 1)
             {
                 // Checking if SetTemp is in the useful range, changing if it is
-                if (SetTemp != 0) // 0 Celcius
+                if (SetTempC != 0) // Celcius
                 {
-                    SetTemp -= 1;
-                    Serial.println(SetTemp);
+                    SetTempC -= 1;
+                    Serial.println(SetTempC, 0);
+                }
+            }
+            else if (UnitsMode == 2)
+            {
+                // Checking if SetTemp is in the useful range, changing if it is
+                if (SetTempF != 32) // Farenheit
+                {
+                    SetTempF -= 1;
+                    Serial.println(SetTempF, 0);
                 }
             }
         }
         delay(250);
     }
-    return SetTemp;
+    return;
 }
 void SetLights()
 {
+    delay(500);
     // Blink 7 segment
 
     //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
 
-    // Taking the current state of the buttons
-    currentStateUp = digitalRead(buttonUp);
-    currentStateDown = digitalRead(buttonDown);
-    while (digitalRead(MainButton) == LOW)
+    while (digitalRead(MainButton) == HIGH)
     {
+        // Taking the current state of the buttons
+        currentStateUp = digitalRead(buttonUp);
+        currentStateDown = digitalRead(buttonDown);
         // If Up button depressed
-        if (currentStateUp == HIGH)
+        if (currentStateUp == LOW)
         {
             //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
             if (currentStateUp != lastFlickUp)
@@ -162,7 +183,7 @@ void SetLights()
             }
         }
         // If Down button depressed
-        if (currentStateDown == HIGH)
+        if (currentStateDown == LOW)
         {
             //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
             if (currentStateDown != lastFlickDown)
@@ -185,17 +206,18 @@ void SetLights()
 }
 void SetUnits()
 {
+    delay(500);
     // Blink 7 segment
 
     //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
 
-    // Taking the current state of the buttons
-    currentStateUp = digitalRead(buttonUp);
-    currentStateDown = digitalRead(buttonDown);
-    while (digitalRead(MainButton) == LOW)
+    while (digitalRead(MainButton) == HIGH)
     {
+        // Taking the current state of the buttons
+        currentStateUp = digitalRead(buttonUp);
+        currentStateDown = digitalRead(buttonDown);
         // If Up button depressed
-        if (currentStateUp == HIGH)
+        if (currentStateUp == LOW)
         {
             //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
             if (currentStateUp != lastFlickUp)
@@ -213,7 +235,7 @@ void SetUnits()
             }
         }
         // If Down button depressed
-        if (currentStateDown == HIGH)
+        if (currentStateDown == LOW)
         {
             //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
             if (currentStateDown != lastFlickDown)
@@ -234,10 +256,9 @@ void SetUnits()
     }
     return;
 }
-}
 bool TempCorrect()
 {
-    GetTemp();
+    double Temp = GetTemp();
     // Test using LED
     // if (abs((SetTemp - Ttherm)) > 5)
     // {
@@ -255,21 +276,43 @@ bool TempCorrect()
     // Actual Function
     // This is where PI control could come into play
     // If setpoint is colder than measured, turn on cooling
-    if ((TthermAvg - SetTemp) > 5.0)
+    if (UnitsMode == 1)
     {
-        analogWrite(ThermoElecA, HIGH);
-        analogWrite(ThermoElecB, LOW);
+        if ((Temp - SetTempC) > 1.0)
+        {
+            analogWrite(ThermoElecA, HIGH);
+            analogWrite(ThermoElecB, LOW);
+        }
+        // If setpoint is much warmer than measured, turn on heating
+        else if ((SetTempC - Temp) > 5.0)
+        {
+            analogWrite(ThermoElecA, LOW);
+            analogWrite(ThermoElecB, HIGH);
+        }
+        // Save power if in range
+        else
+        {
+            analogWrite(savePower, LOW);
+        }
     }
-    // If setpoint is much warmer than measured, turn on heating
-    else if ((SetTemp - TthermAvg) > 10)
+    else if (UnitsMode == 2)
     {
-        analogWrite(ThermoElecA, LOW);
-        analogWrite(ThermoElecB, HIGH);
-    }
-    // Save power if in range
-    else
-    {
-        analogWrite(savePower, LOW);
+        if ((Temp - SetTempF) > 5.0)
+        {
+            analogWrite(ThermoElecA, HIGH);
+            analogWrite(ThermoElecB, LOW);
+        }
+        // If setpoint is much warmer than measured, turn on heating
+        else if ((SetTempF - Temp) > 10.0)
+        {
+            analogWrite(ThermoElecA, LOW);
+            analogWrite(ThermoElecB, HIGH);
+        }
+        // Save power if in range
+        else
+        {
+            analogWrite(savePower, LOW);
+        }
     }
 }
 void SegDisp()
@@ -282,7 +325,7 @@ void MenuSelect()
     Serial.println("Menu");
     unsigned long startMillisMain = millis(); //  Storing the current time
     unsigned long endMillisMain;
-    while (digitalRead(MainButton) == HIGH) //  Loop until the main button goes low
+    while (digitalRead(MainButton) == LOW) //  Loop until the main button goes low
     {
         endMillisMain = millis(); //  Read the current time
     }
@@ -290,19 +333,19 @@ void MenuSelect()
     //if main button pressed for less than one second, go to temp
     //if main button pressed for more than one second and up to five, go to lights
     //if main button pressed longer than 5 seconds, go to units
-    if ((endMillisMain - startMillisMain) <= 2000)
+    if ((endMillisMain - startMillisMain) <= 1000)
     {
         Serial.println("Set Temp");
         SetTempInput();
     }
-    else if ((endMillisMain - startMillisMain) <= 5000 && (endMillisMain - startMillisMain) > 2000)
+    else if ((endMillisMain - startMillisMain) <= 4000 && (endMillisMain - startMillisMain) > 1000)
     {
         Serial.println("Set Lights");
         SetLights();
     }
     else
     {
-        Serial.print("Set Units");
+        Serial.println("Set Units");
         SetUnits();
     }
 
@@ -311,9 +354,9 @@ void MenuSelect()
 void setup()
 {
     Serial.begin(115200);
-    pinMode(buttonUp, INPUT);
-    pinMode(MainButton, INPUT);
-    pinMode(buttonDown, INPUT);
+    pinMode(buttonUp, INPUT_PULLUP);
+    pinMode(MainButton, INPUT_PULLUP);
+    pinMode(buttonDown, INPUT_PULLUP);
     pinMode(Thermistor1, INPUT);
     pinMode(Thermistor2, INPUT);
     pinMode(ThermoElecLED, OUTPUT);
@@ -337,15 +380,13 @@ void setup()
 
     disp.SetBrightness(50);
 
-    //attachInterrupt(digitalPinToInterrupt(MainButton), MenuSelect, RISING); // If menu button is constant on, change to falling or change
-
-    // EEProm set temp
+    // EEProm set temp recall
 }
 void loop()
 {
     // Add system timer interupt so temp correct doesn't run constantly but isn't in ISR
     TempCorrect();
-    if (digitalRead(MainButton) == HIGH)
+    if (digitalRead(MainButton) == LOW)
     {
         MenuSelect();
     }
