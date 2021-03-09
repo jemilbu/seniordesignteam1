@@ -5,11 +5,16 @@
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
-const int ledR = 44, ledB = 49, ledG = 60;
-// Thermoelectric and Thermistor Pins                            //  CHANGE TO MATCH MOTOR DRIVER OUTPUTS
-const int ThermoElec = 30, Thermistor = A0;
+const int ledR = 47, ledB = 49, ledG = 60;
+// Thermoelectric LED Test Pin
+const int ThermoElecLED = 30;
+// Thermoelectric Control Pins
+const int ThermoElecA = 45, ThermoElecB = 46, savePower = 69;
+// Thermistor Pins
+const int Thermistor1 = A0;
+Thermistor2 = A1;
 //  Global Set Temperature, Thermistor Temp and Light Mode
-int SetTemp, Ttherm, LightMode;
+volatile double SetTemp, TthermAvg, LightMode, UnitsMode;
 
 //  Thermoelectric Motor Driver pins
 const int speed = 0, direct = 0;
@@ -41,14 +46,36 @@ RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
 
 int GetTemp()
 {
-    double sensorvalue = analogRead(Thermistor);                                                                           //Read Pin A0
+    double sensorvalue = analogRead(Thermistor1);                                                                          //Read Pin A0
     double voltage = sensorvalue * (5.0 / 1023.0);                                                                         //convert sensor value to voltage
     double Rtherm = ((50 / voltage) - 10) * 1000;                                                                          //Calculates thermistor resistance in Ohm
     double tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
-    Ttherm = tempK - 273.15;
+    double Ttherm1 = tempK - 273.15;
+    double sensorvalue2 = analogRead(Thermistor2);                                                                              //Read Pin A0
+    double voltage2 = sensorvalue2 * (5.0 / 1023.0);                                                                            //convert sensor value to voltage
+    double Rtherm2 = ((50 / voltage2) - 10) * 1000;                                                                             //Calculates thermistor resistance in Ohm
+    double tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
+    double Ttherm2 = tempK2 - 273.15;
+
+    TthermAvg = (Ttherm1 + Ttherm2) / 2.0
+
     // Print temp to screen here
-    disp.DisplayString("25°C",0);
-    return Ttherm;
+    //  disp.DisplayString("25°C",0);
+    Serial.print("Current Temp = ");
+
+    // If display is in Farenheit
+    if (UnitsMode == 2)
+    {
+        double TthermF = (TthermAvg * (9.0/5.0)) + 32.0;
+        Serial.println(TthermF);
+        Serial.print("°F");
+    }
+    else
+    {
+        Serial.println(TthermAvg);
+        Serial.print("°C");
+    }
+    return TthermAvg;
 }
 int SetTempInput()
 {
@@ -80,10 +107,6 @@ int SetTempInput()
                     SetTemp += 1;
                     Serial.println(SetTemp);
                 }
-                else
-                {
-                    SetTemp = SetTemp;
-                }
             }
         }
         // If Down button depressed
@@ -103,50 +126,11 @@ int SetTempInput()
                     SetTemp -= 1;
                     Serial.println(SetTemp);
                 }
-                else
-                {
-                    SetTemp = SetTemp;
-                }
             }
-        }
-        else
-        {
-            SetTemp = SetTemp;
         }
         delay(250);
     }
     return SetTemp;
-}
-void MenuSelect()
-{
-    //debounce delay
-    Serial.println("Menu");
-    unsigned long startMillisMain = millis(); //  Storing the current time
-    unsigned long endMillisMain;
-    while (digitalRead(MainButton) == HIGH) //  Loop until the main button goes low
-    {
-        endMillisMain = millis(); //  Read the current time
-    }
-
-    //if main button pressed for less than one second, go to temp
-    //if main button pressed for more than one second and up to five, go to lights
-    if ((endMillisMain - startMillisMain) <= 2000)
-    {
-        Serial.println("Set Temp");
-        SetTempInput();
-    }
-    else if ((endMillisMain - startMillisMain) <= 5000 && (endMillisMain - startMillisMain) > 2000)
-    {
-        Serial.println("Set Lights");
-        SetLights();
-    }
-    else
-    {
-        Serial.print("Set Units");
-        SetUnits();
-    }
-    
-    return;
 }
 void SetLights()
 {
@@ -175,10 +159,6 @@ void SetLights()
                     LightMode += 1;
                     Serial.println(LightMode);
                 }
-                else
-                {
-                    LightMode = LightMode;
-                }
             }
         }
         // If Down button depressed
@@ -197,15 +177,7 @@ void SetLights()
                     LightMode -= 1;
                     Serial.println(LightMode);
                 }
-                else
-                {
-                    LightMode = LightMode;
-                }
             }
-        }
-        else
-        {
-            LightMode = LightMode;
         }
         delay(250);
     }
@@ -213,27 +185,128 @@ void SetLights()
 }
 void SetUnits()
 {
-    
+    // Blink 7 segment
+
+    //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
+
+    // Taking the current state of the buttons
+    currentStateUp = digitalRead(buttonUp);
+    currentStateDown = digitalRead(buttonDown);
+    while (digitalRead(MainButton) == LOW)
+    {
+        // If Up button depressed
+        if (currentStateUp == HIGH)
+        {
+            //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+            if (currentStateUp != lastFlickUp)
+            {
+                lastDebouneUp = millis();     //  reset the debounce timer
+                lastFlickUp = currentStateUp; //  save the last flicker state
+            }
+            if ((millis() - lastDebouneUp) > debounceDelay)
+            {
+                if (UnitsMode != 2)
+                {
+                    UnitsMode += 1;
+                    Serial.println("°F");
+                }
+            }
+        }
+        // If Down button depressed
+        if (currentStateDown == HIGH)
+        {
+            //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+            if (currentStateDown != lastFlickDown)
+            {
+                lastDebouneDown = millis();       //  reset the debounce timer
+                lastFlickDown = currentStateDown; //  save the last flicker state
+            }
+            if ((millis() - lastDebouneDown) > debounceDelay)
+            {
+                if (UnitsMode != 1)
+                {
+                    UnitsMode -= 1;
+                    Serial.println("°C");
+                }
+            }
+        }
+        delay(250);
+    }
+    return;
+}
 }
 bool TempCorrect()
 {
     GetTemp();
-    if (abs((SetTemp - Ttherm)) > 5)
+    // Test using LED
+    // if (abs((SetTemp - Ttherm)) > 5)
+    // {
+    //     digitalWrite(ThermoElecLED, HIGH);
+    //     Serial.println("On");
+    //     Serial.println(Ttherm);
+    // }
+    // else
+    // {
+    //     digitalWrite(ThermoElecLED, LOW);
+    //     Serial.println("Off");
+    //     Serial.println(Ttherm);
+    // }
+
+    // Actual Function
+    // This is where PI control could come into play
+    // If setpoint is colder than measured, turn on cooling
+    if ((TthermAvg - SetTemp) > 5.0)
     {
-        digitalWrite(ThermoElec, HIGH);
-        Serial.println("On");
-        Serial.println(Ttherm);
+        analogWrite(ThermoElecA, HIGH);
+        analogWrite(ThermoElecB, LOW);
     }
+    // If setpoint is much warmer than measured, turn on heating
+    else if ((SetTemp - TthermAvg) > 10)
+    {
+        analogWrite(ThermoElecA, LOW);
+        analogWrite(ThermoElecB, HIGH);
+    }
+    // Save power if in range
     else
     {
-        digitalWrite(ThermoElec, LOW);
-        Serial.println("Off");
-        Serial.println(Ttherm);
+        analogWrite(savePower, LOW);
     }
 }
 void SegDisp()
 {
     // Conrol of the 7 segment will go here
+}
+void MenuSelect()
+{
+    //debounce delay
+    Serial.println("Menu");
+    unsigned long startMillisMain = millis(); //  Storing the current time
+    unsigned long endMillisMain;
+    while (digitalRead(MainButton) == HIGH) //  Loop until the main button goes low
+    {
+        endMillisMain = millis(); //  Read the current time
+    }
+
+    //if main button pressed for less than one second, go to temp
+    //if main button pressed for more than one second and up to five, go to lights
+    //if main button pressed longer than 5 seconds, go to units
+    if ((endMillisMain - startMillisMain) <= 2000)
+    {
+        Serial.println("Set Temp");
+        SetTempInput();
+    }
+    else if ((endMillisMain - startMillisMain) <= 5000 && (endMillisMain - startMillisMain) > 2000)
+    {
+        Serial.println("Set Lights");
+        SetLights();
+    }
+    else
+    {
+        Serial.print("Set Units");
+        SetUnits();
+    }
+
+    return;
 }
 void setup()
 {
@@ -241,8 +314,12 @@ void setup()
     pinMode(buttonUp, INPUT);
     pinMode(MainButton, INPUT);
     pinMode(buttonDown, INPUT);
-    pinMode(Thermistor, INPUT);
-    pinMode(ThermoElec, OUTPUT);
+    pinMode(Thermistor1, INPUT);
+    pinMode(Thermistor2, INPUT);
+    pinMode(ThermoElecLED, OUTPUT);
+    pinMode(ThermoElecA, OUTPUT);
+    pinMode(ThermoElecB, OUTPUT);
+    pinMode(savePower, OUTPUT);
     pinMode(ledR, OUTPUT);
     pinMode(ledB, OUTPUT);
     pinMode(ledG, OUTPUT);
@@ -256,7 +333,7 @@ void setup()
     //  Common Cathode/Anode
     int digits = 4;
 
-    disp.Begin(COMMON_CATHODE_7,digits,dig1,dig2,dig3,dig4,segA,segB,segC,segD,segE,segF,segG,53);
+    disp.Begin(COMMON_CATHODE_7, digits, dig1, dig2, dig3, dig4, segA, segB, segC, segD, segE, segF, segG, 53);
 
     disp.SetBrightness(50);
 
@@ -266,6 +343,7 @@ void setup()
 }
 void loop()
 {
+    // Add system timer interupt so temp correct doesn't run constantly but isn't in ISR
     TempCorrect();
     if (digitalRead(MainButton) == HIGH)
     {
