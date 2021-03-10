@@ -15,8 +15,6 @@ const int Thermistor1 = A0, Thermistor2 = A1;
 volatile double SetTempC = 0, SetTempF = 32;
 // Global Light and Units Mode
 volatile int LightMode, UnitsMode = 1;
-// Menu flag
-bool MenuFlag = 0;
 
 //  Thermoelectric Motor Driver pins
 const int speed = 0, direct = 0;
