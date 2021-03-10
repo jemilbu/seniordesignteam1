@@ -10,6 +10,7 @@
                 "C:\\arduino-1.8.9\\libraries\\IRComm\\**",
                 "C:\\arduino-1.8.9\\libraries\\Adafruit-GFX-Library-master\\**",
                 "C:\\arduino-1.8.9\\libraries\\Adafruit_LED_Backpack-master\\**",
+                "C:\\arduino-1.8.9\\libraries\\RGBLed-master\\**",
                 "C:\\arduino-1.8.9\\libraries\\OBD2UART\\**",
                 "C:\\arduino-1.8.9\\hardware\\arduino\\avr\\**",
                 "C:\\arduino-1.8.9\\hardware\\arduino\\avr\\cores\\arduino\\**",

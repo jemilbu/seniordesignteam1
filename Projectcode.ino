@@ -1,6 +1,5 @@
 //#include <EEPROM.h>
-#include "SevSeg.h"
-#include "RGBLed.h"
+#include <RGBLed.h>
 
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
@@ -41,11 +40,10 @@ unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 
 unsigned long previousMillisMain = 0; // Stores the main was pressed
 
-//  Create an instance of the 7 segment object
-SevSeg disp;
-
 //  Create an instance of the RGB object
 RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
+
+//  Pins for 7 segment I2C
 
 int GetTemp()
 {
@@ -63,7 +61,6 @@ int GetTemp()
     double TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
 
     // Print temp to screen here
-    //  disp.DisplayString("25°C",0);
     Serial.print("Current Temp = ");
 
     // If display is in Farenheit
@@ -315,10 +312,6 @@ bool TempCorrect()
         }
     }
 }
-void SegDisp()
-{
-    // Conrol of the 7 segment will go here
-}
 void MenuSelect()
 {
     //debounce delay
@@ -368,17 +361,6 @@ void setup()
     pinMode(ledG, OUTPUT);
     pinMode(speed, OUTPUT);
     pinMode(direct, OUTPUT);
-
-    //  Digit Pins for 7 segment
-    const int dig1 = 23, dig2 = 25, dig3 = 27, dig4 = 29;
-    //  Segment Pins for 7 segment
-    const int segA = 31, segB = 33, segC = 35, segD = 37, segE = 39, segF = 41, segG = 43;
-    //  Common Cathode/Anode
-    int digits = 4;
-
-    disp.Begin(COMMON_CATHODE_7, digits, dig1, dig2, dig3, dig4, segA, segB, segC, segD, segE, segF, segG, 53);
-
-    disp.SetBrightness(50);
 
     // EEProm set temp recall
 }
