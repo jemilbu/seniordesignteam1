@@ -1,8 +1,6 @@
 //#include <EEPROM.h>
 #include <RGBLed.h>
-#include <Adafruit-GFX-Library>
-#include <Adafruit_LED_Backpack>
-
+#include "Adafruit_LEDBackpack.h"
 
 
 // Button Pins
@@ -44,6 +42,9 @@ unsigned long previousMillisMain = 0; // Stores the main was pressed
 
 //  Create an instance of the RGB object
 RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
+
+//  Creating an instance of the 7 segment object
+Adafruit_7segment sevseg = Adafruit_7segment();
 
 //  Pins for 7 segment I2C
 
