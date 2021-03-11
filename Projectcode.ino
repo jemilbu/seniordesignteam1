@@ -1,5 +1,9 @@
 //#include <EEPROM.h>
 #include <RGBLed.h>
+#include <Adafruit-GFX-Library>
+#include <Adafruit_LED_Backpack>
+
+
 
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
@@ -362,7 +366,6 @@ void setup()
 
     // EEProm set temp recall
 
-    shift
 }
 void loop()
 {
