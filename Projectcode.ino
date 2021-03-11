@@ -6,11 +6,11 @@
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
-const int ledR = 47, ledB = 49, ledG = 60;
+const int ledR = 2, ledB = 49, ledG = 24;
 // Thermoelectric LED Test Pin
 const int ThermoElecLED = 30;
 // Thermoelectric Control Pins
-const int ThermoElecA = 45, ThermoElecB = 46, savePower = 69;
+const int ThermoElecA = 45, ThermoElecB = 46, savePower = 31;
 // Thermistor Pins
 const int Thermistor1 = A0, Thermistor2 = A1;
 //  Global Set Temperature, Thermistor Temp and Light Mode
@@ -55,13 +55,16 @@ int GetTemp()
     double Rtherm = ((50 / voltage) - 10) * 1000;                                                                          //Calculates thermistor resistance in Ohm
     double tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
     double Ttherm1 = tempK - 273.15;
-    double sensorvalue2 = analogRead(Thermistor2);                                                                              //Read Pin A0
-    double voltage2 = sensorvalue2 * (5.0 / 1023.0);                                                                            //convert sensor value to voltage
-    double Rtherm2 = ((50 / voltage2) - 10) * 1000;                                                                             //Calculates thermistor resistance in Ohm
-    double tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
-    double Ttherm2 = tempK2 - 273.15;
 
-    double TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
+    // double sensorvalue2 = analogRead(Thermistor2);                                                                              //Read Pin A0
+    // double voltage2 = sensorvalue2 * (5.0 / 1023.0);                                                                            //convert sensor value to voltage
+    // double Rtherm2 = ((50 / voltage2) - 10) * 1000;                                                                             //Calculates thermistor resistance in Ohm
+    // double tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
+    // double Ttherm2 = tempK2 - 273.15;
+
+    // double TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
+
+    double TthermAvg = Ttherm1;
 
     // Print temp to screen here
     Serial.print("Current Temp = ");
@@ -79,6 +82,27 @@ int GetTemp()
         Serial.print(TthermAvg);
         Serial.println("°C");
         return TthermAvg;
+    }
+}
+void LED(int mode)
+{
+    // Turn all Off
+    digitalWrite(ledR,HIGH);
+    digitalWrite(ledG,HIGH);
+    digitalWrite(ledB,HIGH);
+    //  Red
+    if (mode == 1)
+    {
+        digitalWrite(ledR,LOW);
+    }
+    //  Green
+    else if(mode == 2)
+    {
+        digitalWrite(ledG,LOW);
+    }
+    else if(mode == 3)
+    {
+        digitalWrite(ledB,LOW);
     }
 }
 void SetTempInput()
@@ -175,7 +199,7 @@ void SetLights()
             }
             if ((millis() - lastDebouneUp) > debounceDelay)
             {
-                if (LightMode != 12)
+                if (LightMode != 3)
                 {
                     LightMode += 1;
                     Serial.println(LightMode);
@@ -201,6 +225,7 @@ void SetLights()
             }
         }
         delay(250);
+        LED(LightMode);
     }
     return;
 }
@@ -280,38 +305,38 @@ bool TempCorrect()
     {
         if ((Temp - SetTempC) > 1.0)
         {
-            analogWrite(ThermoElecA, HIGH);
-            analogWrite(ThermoElecB, LOW);
+            analogWrite(ThermoElecA, 255);
+            analogWrite(ThermoElecB, 0);
         }
         // If setpoint is much warmer than measured, turn on heating
         else if ((SetTempC - Temp) > 5.0)
         {
-            analogWrite(ThermoElecA, LOW);
-            analogWrite(ThermoElecB, HIGH);
+            analogWrite(ThermoElecA, 0);
+            analogWrite(ThermoElecB, 255);
         }
         // Save power if in range
         else
         {
-            analogWrite(savePower, LOW);
+            analogWrite(savePower, 0);
         }
     }
     else if (UnitsMode == 2)
     {
         if ((Temp - SetTempF) > 5.0)
         {
-            analogWrite(ThermoElecA, HIGH);
-            analogWrite(ThermoElecB, LOW);
+            analogWrite(ThermoElecA, 255);
+            analogWrite(ThermoElecB, 0);
         }
         // If setpoint is much warmer than measured, turn on heating
         else if ((SetTempF - Temp) > 10.0)
         {
-            analogWrite(ThermoElecA, LOW);
-            analogWrite(ThermoElecB, HIGH);
+            analogWrite(ThermoElecA, 0);
+            analogWrite(ThermoElecB, 255);
         }
         // Save power if in range
         else
         {
-            analogWrite(savePower, LOW);
+            analogWrite(savePower, 0);
         }
     }
 }
@@ -364,6 +389,11 @@ void setup()
     pinMode(ledG, OUTPUT);
     pinMode(speed, OUTPUT);
     pinMode(direct, OUTPUT);
+
+    // Turn all Off
+    digitalWrite(ledR,HIGH);
+    digitalWrite(ledG,HIGH);
+    digitalWrite(ledB,HIGH);
 
     // EEProm set temp recall
 
