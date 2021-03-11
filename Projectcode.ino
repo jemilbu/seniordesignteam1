@@ -381,6 +381,8 @@ void setup()
     disp.SetBrightness(50);
 
     // EEProm set temp recall
+
+    shift
 }
 void loop()
 {
