@@ -18,6 +18,8 @@ volatile double SetTempC = 0, SetTempF = 32;
 // Global Light and Units Mode
 volatile int LightMode, UnitsMode = 1;
 
+double time;
+
 //  Thermoelectric Motor Driver pins
 const int speed = 0, direct = 0;
 
@@ -317,7 +319,8 @@ bool TempCorrect()
         // Save power if in range
         else
         {
-            analogWrite(savePower, 0);
+            analogWrite(ThermoElecA, 0);
+            analogWrite(ThermoElecB, 0);
         }
     }
     else if (UnitsMode == 2)
@@ -336,7 +339,8 @@ bool TempCorrect()
         // Save power if in range
         else
         {
-            analogWrite(savePower, 0);
+            analogWrite(ThermoElecA, 0);
+            analogWrite(ThermoElecB, 0);
         }
     }
 }
@@ -369,7 +373,7 @@ void MenuSelect()
         Serial.println("Set Units");
         SetUnits();
     }
-
+    time = millis();
     return;
 }
 void setup()
@@ -401,6 +405,7 @@ void setup()
 void loop()
 {
     // Add system timer interupt so temp correct doesn't run constantly but isn't in ISR
+    Serial.print((millis()-time)/1000);
     TempCorrect();
     if (digitalRead(MainButton) == LOW)
     {
