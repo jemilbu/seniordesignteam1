@@ -6,7 +6,7 @@
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
-const int ledR = 2, ledB = 49, ledG = 24;
+const int ledR = 26, ledB = 22, ledG = 24;
 // Thermoelectric LED Test Pin
 const int ThermoElecLED = 30;
 // Thermoelectric Control Pins
