@@ -4,7 +4,12 @@
 //#include <EEPROM.h>
 #include <RGBLed.h>
 #include "Adafruit_LEDBackpack.h"
+#include <Wire.h>
 
+//#define debug 3   //  Data Output
+#define debug 2 //  Only necassary Serial Print
+//#define debug 1 //  All Serial Print
+//#define debug 0   //  No Serial Print
 
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
@@ -17,33 +22,38 @@ const int ThermoElecA = 45, ThermoElecB = 46, savePower = 31;
 // Thermistor Pins
 const int Thermistor1 = A0, Thermistor2 = A1;
 //  Global Set Temperature, Thermistor Temp and Light Mode
-volatile double SetTempC = 0, SetTempF = 32;
+volatile float SetTempC = 0, SetTempF = 32;
 // Global Light and Units Mode
-volatile int LightMode, UnitsMode = 1;
-
-double time;
+volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1;
+//  Global Time constants
+unsigned long time;
+unsigned long previousMillis = 0;
 
 //  Thermoelectric Motor Driver pins
 const int speed = 0, direct = 0;
 
-int currentStateUp;               //  State of push button 1
-int currentStateDown;             //  State of push button 2
-int currentStateMain;             //  State of push button 3
-const double debounceDelay = 0.5; //  Debounce time; increase if output flickers
+volatile int currentStateUp;     //  State of push button 1
+volatile int currentStateDown;   //  State of push button 2
+volatile int currentStateMain;   //  State of push button 3
+const float debounceDelay = 0.5; //  Debounce time; increase if output flickers
 
-int lastSteadyUp = HIGH;             //  previous steady state from input
-int lastFlickUp = HIGH;              //  previous flicker state from input
+volatile int lastSteadyUp = HIGH;    //  previous steady state from input
+volatile int lastFlickUp = HIGH;     //  previous flicker state from input
 unsigned long int lastDebouneUp = 0; //the last time the output was toggled
 
-int lastSteadyDown = HIGH;             //  previous steady state from input
-int lastFlickDown = HIGH;              //  previous flicker state from input
+volatile int lastSteadyDown = HIGH;    //  previous steady state from input
+volatile int lastFlickDown = HIGH;     //  previous flicker state from input
 unsigned long int lastDebouneDown = 0; //the last time the output was toggled
 
-int lastSteadyMain = HIGH;             //  previous steady state from input
-int lastFlickMain = HIGH;              //  previous flicker state from input
+volatile int lastSteadyMain = HIGH;    //  previous steady state from input
+volatile int lastFlickMain = HIGH;     //  previous flicker state from input
 unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 
 unsigned long previousMillisMain = 0; // Stores the main was pressed
+
+//  Bool Flag for control
+volatile bool bang;
+volatile bool cooling;
 
 //  Create an instance of the RGB object
 RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
@@ -51,92 +61,174 @@ RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
 //  Creating an instance of the 7 segment object
 Adafruit_7segment sevseg = Adafruit_7segment();
 
-//  Pins for 7 segment I2C
-
-#line 53 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 61 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp();
-#line 89 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 142 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void LED(int mode);
-#line 110 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 178 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetTempInput();
-#line 181 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 322 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetLights();
-#line 234 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 394 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetUnits();
-#line 286 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 466 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 bool TempCorrect();
-#line 347 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 722 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void MenuSelect();
-#line 379 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 830 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void setup();
-#line 405 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 861 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void loop();
-#line 53 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 61 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp()
 {
-    double sensorvalue = analogRead(Thermistor1);                                                                          //Read Pin A0
-    double voltage = sensorvalue * (5.0 / 1023.0);                                                                         //convert sensor value to voltage
-    double Rtherm = ((50 / voltage) - 10) * 1000;                                                                          //Calculates thermistor resistance in Ohm
-    double tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
-    double Ttherm1 = tempK - 273.15;
+    float sensorvalue = analogRead(Thermistor1);                                                                          //Read Pin A0
+    float voltage = sensorvalue * (5.0 / 1023.0);                                                                         //convert sensor value to voltage
+    float Rtherm = ((50 / voltage) - 10) * 1000;                                                                          //Calculates thermistor resistance in Ohm
+    float tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
+    float Ttherm1 = tempK - 273.15;
 
-    // double sensorvalue2 = analogRead(Thermistor2);                                                                              //Read Pin A0
-    // double voltage2 = sensorvalue2 * (5.0 / 1023.0);                                                                            //convert sensor value to voltage
-    // double Rtherm2 = ((50 / voltage2) - 10) * 1000;                                                                             //Calculates thermistor resistance in Ohm
-    // double tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
-    // double Ttherm2 = tempK2 - 273.15;
+    // float sensorvalue2 = analogRead(Thermistor2);                                                                              //Read Pin A0
+    // float voltage2 = sensorvalue2 * (5.0 / 1023.0);                                                                            //convert sensor value to voltage
+    // float Rtherm2 = ((50 / voltage2) - 10) * 1000;                                                                             //Calculates thermistor resistance in Ohm
+    // float tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
+    // float Ttherm2 = tempK2 - 273.15;
 
-    // double TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
+    // float TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
 
-    double TthermAvg = Ttherm1;
+    float TthermAvg = Ttherm1;
 
-    // Print temp to screen here
-    Serial.print("Current Temp = ");
-
-    // If display is in Farenheit
-    if (UnitsMode == 2)
+    // Print temp to Serial Monitor
+    if (debug == 1 || debug == 2 || debug == 3)
     {
-        double TthermF = (TthermAvg * (9.0 / 5.0)) + 32.0;
-        Serial.print(TthermF);
-        Serial.println("°F");
-        return TthermF;
+        Serial.print("Current Temp = ");
     }
-    else if (UnitsMode == 1)
+    if (UnitsMode == 1)
     {
-        Serial.print(TthermAvg);
-        Serial.println("°C");
+        //  Print Temp to Serial Monitor
+        if (debug == 1 || debug == 2 || debug == 3)
+        {
+            Serial.print(TthermAvg);
+        }
+        if (debug == 1 || debug == 2 || debug == 3)
+        {
+            Serial.println("°C");
+        }
+
+        //  Converting from float to int
+        int temp = (int)TthermAvg;
+
+        //  Extracting Digits
+        int x = (temp / 10U) % 10;
+        int y = (temp / 1U) % 10;
+
+        //  Printing to 7 segment
+        sevseg.writeDigitNum(0, x);
+        sevseg.writeDigitNum(1, y);
+        sevseg.writeDigitRaw(3, 0b01100011);
+        sevseg.writeDigitNum(4, 12);
+        sevseg.writeDisplay();
         return TthermAvg;
+    }
+    // If display is in Farenheit
+    else if (UnitsMode == 2)
+    {
+        //  Converting from °C to °F
+        float TthermF = (TthermAvg * (9.0 / 5.0)) + 32.0;
+
+        //  Converting from float to int
+        int temp = (int)TthermF;
+
+        //  Extracting Digits
+        int x = (temp / 10U) % 10;
+        int y = (temp / 1U) % 10;
+
+        //  Printing to 7 segment
+        sevseg.writeDigitNum(0, x);
+        sevseg.writeDigitNum(1, y);
+        sevseg.writeDigitRaw(3, 0b01100011);
+        sevseg.writeDigitNum(4, 15);
+        sevseg.writeDisplay();
+
+        if (debug == 1 || debug == 2 || debug == 3)
+        {
+            Serial.print(TthermF);
+        }
+        if (debug == 1 || debug == 2 || debug == 3)
+        {
+            Serial.println("°F");
+        }
+        return TthermF;
     }
 }
 void LED(int mode)
 {
     // Turn all Off
-    digitalWrite(ledR,HIGH);
-    digitalWrite(ledG,HIGH);
-    digitalWrite(ledB,HIGH);
-    //  Red
-    if (mode == 1)
+    digitalWrite(ledR, HIGH);
+    digitalWrite(ledG, HIGH);
+    digitalWrite(ledB, HIGH);
+    //  Off Mode
+    if (mode == 0)
     {
-        digitalWrite(ledR,LOW);
+        digitalWrite(ledR, HIGH);
+        digitalWrite(ledG, HIGH);
+        digitalWrite(ledB, HIGH);
+    }
+    //  Red
+    else if (mode == 1)
+    {
+        digitalWrite(ledR, LOW);
     }
     //  Green
-    else if(mode == 2)
+    else if (mode == 2)
     {
-        digitalWrite(ledG,LOW);
+        digitalWrite(ledG, LOW);
     }
-    else if(mode == 3)
+    //  Blue
+    else if (mode == 3)
     {
-        digitalWrite(ledB,LOW);
+        digitalWrite(ledB, LOW);
+    }
+    //  White
+    else if (mode == 4)
+    {
+        digitalWrite(ledR, LOW);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, LOW);
     }
 }
 void SetTempInput()
 {
-    delay(500);
     // Blink 7 segment
+    sevseg.clear();
+    sevseg.blinkRate(2);
+    sevseg.writeDisplay();
+
+    if (UnitsMode == 1)
+    {
+        int write = (int)SetTempC;
+        int x = (write / 10U) % 10;
+        int y = (write / 1U) % 10;
+        sevseg.writeDigitNum(0, x);
+        sevseg.writeDigitNum(1, y);
+        sevseg.writeDigitRaw(3, 0b01100011);
+        sevseg.writeDigitNum(4, 12);
+        sevseg.writeDisplay();
+    }
+    else if (UnitsMode == 2)
+    {
+        int write = (int)SetTempF;
+        int x = (write / 10U) % 10;
+        int y = (write / 1U) % 10;
+        sevseg.writeDigitNum(0, x);
+        sevseg.writeDigitNum(1, y);
+        sevseg.writeDigitRaw(3, 0b01100011);
+        sevseg.writeDigitNum(4, 15);
+        sevseg.writeDisplay();
+    }
 
     // While loop this until main button is pressed, store to EEprom once complete
     // Make sure to put a counter on eeprom to prevent overwrite
-    delay(1000);
     while (digitalRead(MainButton) == HIGH)
     {
         // Taking the current state of the buttons
@@ -160,7 +252,20 @@ void SetTempInput()
                     if (SetTempC != 80) // Celcius
                     {
                         SetTempC += 1;
-                        Serial.println(SetTempC, 0);
+                        //  If debug mode 1 or 2 enabled, print to serial port
+                        if (debug == 1 || debug == 2)
+                        {
+                            Serial.println(SetTempC, 0);
+                        }
+                        //  Print to 7 segment
+                        int write = (int)SetTempC;
+                        int x = (write / 10U) % 10;
+                        int y = (write / 1U) % 10;
+                        sevseg.writeDigitNum(0, x);
+                        sevseg.writeDigitNum(1, y);
+                        sevseg.writeDigitRaw(3, 0b01100011);
+                        sevseg.writeDigitNum(4, 12);
+                        sevseg.writeDisplay();
                     }
                 }
                 else if (UnitsMode == 2)
@@ -169,7 +274,19 @@ void SetTempInput()
                     if (SetTempF != 176) // Farenheit
                     {
                         SetTempF += 1;
-                        Serial.println(SetTempF, 0);
+                        if (debug == 1 || debug == 2)
+                        {
+                            Serial.println(SetTempF, 0);
+                        }
+                        //  Print to 7 segment
+                        int write = (int)SetTempF;
+                        int x = (write / 10U) % 10;
+                        int y = (write / 1U) % 10;
+                        sevseg.writeDigitNum(0, x);
+                        sevseg.writeDigitNum(1, y);
+                        sevseg.writeDigitRaw(3, 0b01100011);
+                        sevseg.writeDigitNum(4, 15);
+                        sevseg.writeDisplay();
                     }
                 }
             }
@@ -183,7 +300,19 @@ void SetTempInput()
                 if (SetTempC != 0) // Celcius
                 {
                     SetTempC -= 1;
-                    Serial.println(SetTempC, 0);
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println(SetTempC, 0);
+                    }
+                    //  Print to 7 segment
+                    int write = (int)SetTempC;
+                    int x = (write / 10U) % 10;
+                    int y = (write / 1U) % 10;
+                    sevseg.writeDigitNum(0, x);
+                    sevseg.writeDigitNum(1, y);
+                    sevseg.writeDigitRaw(3, 0b01100011);
+                    sevseg.writeDigitNum(4, 12);
+                    sevseg.writeDisplay();
                 }
             }
             else if (UnitsMode == 2)
@@ -192,7 +321,19 @@ void SetTempInput()
                 if (SetTempF != 32) // Farenheit
                 {
                     SetTempF -= 1;
-                    Serial.println(SetTempF, 0);
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println(SetTempF, 0);
+                    }
+                    //  Print to 7 segment
+                    int write = (int)SetTempF;
+                    int x = (write / 10U) % 10;
+                    int y = (write / 1U) % 10;
+                    sevseg.writeDigitNum(0, x);
+                    sevseg.writeDigitNum(1, y);
+                    sevseg.writeDigitRaw(3, 0b01100011);
+                    sevseg.writeDigitNum(4, 15);
+                    sevseg.writeDisplay();
                 }
             }
         }
@@ -202,11 +343,14 @@ void SetTempInput()
 }
 void SetLights()
 {
-    delay(500);
     // Blink 7 segment
-
+    sevseg.clear();
+    sevseg.blinkRate(2);
+    sevseg.writeDigitNum(4, LightMode);
+    sevseg.writeDisplay();
     //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
 
+    bool change = 0;
     while (digitalRead(MainButton) == HIGH)
     {
         // Taking the current state of the buttons
@@ -223,10 +367,16 @@ void SetLights()
             }
             if ((millis() - lastDebouneUp) > debounceDelay)
             {
-                if (LightMode != 3)
+                if (LightMode != 4)
                 {
                     LightMode += 1;
-                    Serial.println(LightMode);
+                    sevseg.writeDigitNum(4, LightMode);
+                    sevseg.writeDisplay();
+                    change = 1;
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println(LightMode);
+                    }
                 }
             }
         }
@@ -241,15 +391,25 @@ void SetLights()
             }
             if ((millis() - lastDebouneDown) > debounceDelay)
             {
-                if (LightMode != 1)
+                if (LightMode != 0)
                 {
                     LightMode -= 1;
-                    Serial.println(LightMode);
+                    sevseg.writeDigitNum(4, LightMode);
+                    sevseg.writeDisplay();
+                    change = 1;
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println(LightMode);
+                    }
                 }
             }
         }
         delay(250);
-        LED(LightMode);
+        if (change == 1)
+        {
+            change = 0;
+            LED(LightMode);
+        }
     }
     return;
 }
@@ -257,7 +417,8 @@ void SetUnits()
 {
     delay(500);
     // Blink 7 segment
-
+    sevseg.blinkRate(2);
+    sevseg.writeDisplay();
     //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
 
     while (digitalRead(MainButton) == HIGH)
@@ -279,7 +440,10 @@ void SetUnits()
                 if (UnitsMode != 2)
                 {
                     UnitsMode += 1;
-                    Serial.println("°F");
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println("°F");
+                    }
                 }
             }
         }
@@ -297,17 +461,33 @@ void SetUnits()
                 if (UnitsMode != 1)
                 {
                     UnitsMode -= 1;
-                    Serial.println("°C");
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println("°C");
+                    }
                 }
             }
         }
         delay(250);
     }
+
+    //  Converting previous user value to new units
+    if (UnitsMode == 1 && prevUnit == 2)
+    {
+        SetTempC = (SetTempF - 32.0) * (5.0 / 9.0);
+    }
+    else if (UnitsMode == 2 && prevUnit == 1)
+    {
+        SetTempF = (SetTempC * (9.0 / 5.0)) + 32.0;
+    }
+
+    //  Resetting Previous Units
+    prevUnit = UnitsMode;
     return;
 }
 bool TempCorrect()
 {
-    double Temp = GetTemp();
+    float Temp = GetTemp();
     // Test using LED
     // if (abs((SetTemp - Ttherm)) > 5)
     // {
@@ -325,55 +505,318 @@ bool TempCorrect()
     // Actual Function
     // This is where PI control could come into play
     // If setpoint is colder than measured, turn on cooling
+
+    //  If the units are °C
     if (UnitsMode == 1)
     {
-        if ((Temp - SetTempC) > 1.0)
+        //  If the current temperature is above the set temperature
+        if ((Temp - SetTempC) >= 0.0)
         {
-            analogWrite(ThermoElecA, 255);
-            analogWrite(ThermoElecB, 0);
+            //  Switch cooling flag to cooling
+            cooling = 1;
+            //  Show cooling on debug
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("Cooling");
+            }
         }
-        // If setpoint is much warmer than measured, turn on heating
-        else if ((SetTempC - Temp) > 5.0)
+        //  If the current temperature is more than 5 °C below the set temperature
+        else if ((Temp - SetTempC) < -5.0)
         {
-            analogWrite(ThermoElecA, 0);
-            analogWrite(ThermoElecB, 255);
+            //  Switch cooling flag to heating
+            cooling = 0;
+            //  Show heating on debug
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("Heating");
+            }
         }
-        // Save power if in range
         else
         {
+            //  Turn off the TEC
             analogWrite(ThermoElecA, 0);
             analogWrite(ThermoElecB, 0);
+            //  Show off on debug
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("Off");
+            }
+            return 0;
+        }
+        //  If cooling has been enabled
+        if (cooling == 1)
+        {
+            //  If we are above set temperature by 1 or have not reached the set temp yet
+            if (bang == false)
+            {
+                //  Turn on the TEC
+                analogWrite(ThermoElecA, 255);
+                analogWrite(ThermoElecB, 0);
+                //  If we go below the set point
+                if ((Temp - SetTempC) == -1.0)
+                {
+                    //  Switch the controller flag
+                    bang = true;
+                }
+                //  Show cooling to set point
+                if (debug == 1)
+                {
+                    Serial.println("Cooling Down to Setpoint-1");
+                }
+            }
+            //  If we are below the set point
+            else if (bang == true)
+            {
+                //  Turn off the TEC
+                analogWrite(ThermoElecA, 0);
+                analogWrite(ThermoElecB, 0);
+                //  If we are above the set point or have switched from heating
+                if ((Temp - SetTempC) == 1.0 || (Temp - SetTempC) >= 0.0)
+                {
+                    bang = false;
+                }
+                //  Show off until past set point
+                if (debug == 1)
+                {
+                    Serial.println("Turning Off until Setpoint +1");
+                }
+            }
+        }
+
+        //  If heating has been enabled
+        if (cooling == 0)
+        {
+            //  If we are above set temperature by 5 or have not reached the set temp yet
+            if (bang == true)
+            {
+                //  Turn on the TEC
+                analogWrite(ThermoElecA, 255);
+                analogWrite(ThermoElecB, 0);
+                //  If we go above the set point
+                if ((Temp - SetTempC) == 1.0)
+                {
+                    //  Switch the controller flag
+                    bang = false;
+                }
+                //  Show heating to set point
+                if (debug == 1)
+                {
+                    Serial.println("Heating up to Setpoint +1");
+                }
+            }
+            //  If we are above the set point
+            else if (bang == false)
+            {
+                //  Turn off the TEC
+                analogWrite(ThermoElecA, 0);
+                analogWrite(ThermoElecB, 0);
+                //  If we are below the set point or have switched from cooling
+                if ((Temp - SetTempC) == -1.0 || (Temp - SetTempC) < -5.0)
+                {
+                    bang = true;
+                }
+                //  Show off until past set point
+                if (debug == 1)
+                {
+                    Serial.println("Turning Off until Setpoint -1");
+                }
+            }
         }
     }
-    else if (UnitsMode == 2)
+    //  If the units are °F
+    if (UnitsMode == 2)
     {
-        if ((Temp - SetTempF) > 5.0)
+        //  If the current temperature is above the set temperature
+        if ((Temp - SetTempF) >= 0.0)
         {
-            analogWrite(ThermoElecA, 255);
-            analogWrite(ThermoElecB, 0);
+            //  Switch cooling flag to cooling
+            cooling = 1;
+            //  Show cooling on debug
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("Cooling");
+            }
         }
-        // If setpoint is much warmer than measured, turn on heating
-        else if ((SetTempF - Temp) > 10.0)
+        //  If the current temperature is more than 10 °F below the set temperature
+        else if ((Temp - SetTempF) < -10.0)
         {
-            analogWrite(ThermoElecA, 0);
-            analogWrite(ThermoElecB, 255);
+            //  Switch cooling flag to heating
+            cooling = 0;
+            //  Show heating on debug
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("Heating");
+            }
         }
-        // Save power if in range
         else
         {
+            //  Turn off the TEC
             analogWrite(ThermoElecA, 0);
             analogWrite(ThermoElecB, 0);
+            //  Show off on debug
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("Off");
+            }
+            return 0;
+        }
+        //  If cooling has been enabled
+        if (cooling == 1)
+        {
+            //  If we are above set temperature by 1 or have not reached the set temp yet
+            if (bang == false)
+            {
+                //  Turn on the TEC
+                analogWrite(ThermoElecA, 255);
+                analogWrite(ThermoElecB, 0);
+                //  If we go below the set point
+                if ((Temp - SetTempF) == -1.0)
+                {
+                    //  Switch the controller flag
+                    bang = true;
+                }
+                //  Show cooling to set point
+                if (debug == 1)
+                {
+                    Serial.println("Cooling Down to Setpoint-1");
+                }
+            }
+            //  If we are below the set point
+            else if (bang == true)
+            {
+                //  Turn off the TEC
+                analogWrite(ThermoElecA, 0);
+                analogWrite(ThermoElecB, 0);
+                //  If we are above the set point or have switched from heating
+                if ((Temp - SetTempF) == 1.0 || (Temp - SetTempF) >= 0.0)
+                {
+                    bang = false;
+                }
+                //  Show off until past set point
+                if (debug == 1)
+                {
+                    Serial.println("Turning Off until Setpoint +1");
+                }
+            }
+        }
+
+        //  If heating has been enabled
+        if (cooling == 0)
+        {
+            //  If we are above set temperature by 5 or have not reached the set temp yet
+            if (bang == true)
+            {
+                //  Turn on the TEC
+                analogWrite(ThermoElecA, 255);
+                analogWrite(ThermoElecB, 0);
+                //  If we go above the set point
+                if ((Temp - SetTempF) == 1.0)
+                {
+                    //  Switch the controller flag
+                    bang = false;
+                }
+                //  Show heating to set point
+                if (debug == 1)
+                {
+                    Serial.println("Heating up to Setpoint+1");
+                }
+            }
+            //  If we are above the set point
+            else if (bang == false)
+            {
+                //  Turn off the TEC
+                analogWrite(ThermoElecA, 0);
+                analogWrite(ThermoElecB, 0);
+                //  If we are below the set point or have switched from cooling
+                if ((Temp - SetTempF) == -1.0 || (Temp - SetTempF) < -5.0)
+                {
+                    bang = true;
+                }
+                //  Show off until past set point
+                if (debug == 1)
+                {
+                    Serial.println("Turning Off until Setpoint -1");
+                }
+            }
         }
     }
 }
 void MenuSelect()
 {
-    //debounce delay
-    Serial.println("Menu");
+    if (debug == 1 || debug == 2)
+    {
+        Serial.println("Menu");
+    }
     unsigned long startMillisMain = millis(); //  Storing the current time
     unsigned long endMillisMain;
+    //  Do once flag for MenuSelect
+    bool doOnce1 = 1, doOnce2 = 1, doOnce3 = 1, doOnce4 = 1;
     while (digitalRead(MainButton) == LOW) //  Loop until the main button goes low
     {
+        if ((millis() - startMillisMain) <= 2000)
+        {
+
+            if (doOnce1 == 1)
+            {
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Set Temp");
+                }
+                sevseg.clear();
+                sevseg.writeDisplay();
+                sevseg.writeDigitNum(1, 1, true);
+                sevseg.writeDisplay();
+                doOnce1 = 0;
+            }
+        }
+        else if ((millis() - startMillisMain) <= 4000 && (millis() - startMillisMain) > 2000)
+        {
+
+            if (doOnce2 == 1)
+            {
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Set Lights");
+                }
+                sevseg.clear();
+                sevseg.writeDisplay();
+                sevseg.writeDigitNum(1, 2, true);
+                sevseg.writeDisplay();
+                doOnce2 = 0;
+            }
+        }
+        else if ((millis() - startMillisMain) <= 6000 && (millis() - startMillisMain) > 4000)
+        {
+
+            if (doOnce3 == 1)
+            {
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Set Units");
+                }
+                sevseg.clear();
+                sevseg.writeDisplay();
+                sevseg.writeDigitNum(1, 3, true);
+                sevseg.writeDisplay();
+                doOnce3 = 0;
+            }
+        }
+        else
+        {
+            if (doOnce4 == 1)
+            {
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Set Brightness");
+                }
+                sevseg.clear();
+                sevseg.writeDisplay();
+                sevseg.writeDigitNum(1, 4, true);
+                sevseg.writeDisplay();
+                doOnce4 = 0;
+            }
+        }
+
         endMillisMain = millis(); //  Read the current time
     }
 
@@ -382,19 +825,27 @@ void MenuSelect()
     //if main button pressed longer than 5 seconds, go to units
     if ((endMillisMain - startMillisMain) <= 1000)
     {
-        Serial.println("Set Temp");
+        delay(1000);
         SetTempInput();
     }
     else if ((endMillisMain - startMillisMain) <= 4000 && (endMillisMain - startMillisMain) > 1000)
     {
-        Serial.println("Set Lights");
+        delay(1000);
         SetLights();
+    }
+    else if ((endMillisMain - startMillisMain) <= 6000 && (endMillisMain - startMillisMain) > 4000)
+    {
+        delay(1000);
+        SetUnits();
     }
     else
     {
-        Serial.println("Set Units");
-        SetUnits();
+        delay(1000);
+        //SetBrightness();
     }
+
+    sevseg.blinkRate(0);
+    doOnce1 = 1, doOnce2 = 1, doOnce3 = 1, doOnce4 = 1;
     time = millis();
     return;
 }
@@ -417,23 +868,38 @@ void setup()
     pinMode(direct, OUTPUT);
 
     // Turn all Off
-    digitalWrite(ledR,HIGH);
-    digitalWrite(ledG,HIGH);
-    digitalWrite(ledB,HIGH);
+    digitalWrite(ledR, HIGH);
+    digitalWrite(ledG, HIGH);
+    digitalWrite(ledB, HIGH);
 
     // EEProm set temp recall
 
+    //  Setting up the display
+    sevseg.begin(0x70);
+
+    //  Pre-Load the Temperature to display
+    GetTemp();
 }
 void loop()
 {
-    // Add system timer interupt so temp correct doesn't run constantly but isn't in ISR
-    Serial.print((millis()-time)/1000);
-    TempCorrect();
+    unsigned long currentMillis = millis();
+    //  Only check the temperature every 5 seconds
+    if ((currentMillis - previousMillis) >= 5000)
+    {
+        if (debug == 3)
+        {
+            Serial.print((millis() - time) / 1000);
+        }
+        previousMillis = currentMillis;
+        TempCorrect();
+    }
+    //  Go to the Menu if the Menu button is pressed
     if (digitalRead(MainButton) == LOW)
     {
         MenuSelect();
     }
-    delay(1000);
+    //  Tiny delay to help with flicking
+    delay(500);
 }
 
 /*
