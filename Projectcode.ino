@@ -1023,7 +1023,7 @@ void loop()
     //  Reset Flag
 
     //  Tiny delay to help with flicking
-    delay(500);
+    delay(5);
 }
 
 /*
