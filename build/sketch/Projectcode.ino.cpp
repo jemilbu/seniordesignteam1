@@ -7,8 +7,8 @@
 #include <Wire.h>
 
 //#define debug 3   //  Data Output
-#define debug 2 //  Only necassary Serial Print
-//#define debug 1 //  All Serial Print
+//#define debug 2 //  Only necassary Serial Print
+#define debug 1 //  All Serial Print
 //#define debug 0   //  No Serial Print
 
 // Button Pins
@@ -23,8 +23,8 @@ const int ThermoElecA = 45, ThermoElecB = 46, savePower = 31;
 const int Thermistor1 = A0, Thermistor2 = A1;
 //  Global Set Temperature, Thermistor Temp and Light Mode
 volatile float SetTempC = 0, SetTempF = 32;
-// Global Light and Units Mode
-volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1;
+// Global Mode
+volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1, Brightness = 15;
 //  Global Time constants
 unsigned long time;
 unsigned long previousMillis = 0;
@@ -67,17 +67,19 @@ int GetTemp();
 void LED(int mode);
 #line 178 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetTempInput();
-#line 322 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 328 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetLights();
-#line 394 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 411 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetUnits();
-#line 466 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 502 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+void SetBrightness();
+#line 602 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 bool TempCorrect();
-#line 722 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 858 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void MenuSelect();
-#line 830 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 966 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void setup();
-#line 861 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 997 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void loop();
 #line 61 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp()
@@ -204,11 +206,13 @@ void SetTempInput()
     sevseg.blinkRate(2);
     sevseg.writeDisplay();
 
+    //  Pre-load display
     if (UnitsMode == 1)
     {
         int write = (int)SetTempC;
         int x = (write / 10U) % 10;
         int y = (write / 1U) % 10;
+
         sevseg.writeDigitNum(0, x);
         sevseg.writeDigitNum(1, y);
         sevseg.writeDigitRaw(3, 0b01100011);
@@ -220,6 +224,7 @@ void SetTempInput()
         int write = (int)SetTempF;
         int x = (write / 10U) % 10;
         int y = (write / 1U) % 10;
+
         sevseg.writeDigitNum(0, x);
         sevseg.writeDigitNum(1, y);
         sevseg.writeDigitRaw(3, 0b01100011);
@@ -261,6 +266,7 @@ void SetTempInput()
                         int write = (int)SetTempC;
                         int x = (write / 10U) % 10;
                         int y = (write / 1U) % 10;
+
                         sevseg.writeDigitNum(0, x);
                         sevseg.writeDigitNum(1, y);
                         sevseg.writeDigitRaw(3, 0b01100011);
@@ -308,6 +314,7 @@ void SetTempInput()
                     int write = (int)SetTempC;
                     int x = (write / 10U) % 10;
                     int y = (write / 1U) % 10;
+
                     sevseg.writeDigitNum(0, x);
                     sevseg.writeDigitNum(1, y);
                     sevseg.writeDigitRaw(3, 0b01100011);
@@ -329,6 +336,7 @@ void SetTempInput()
                     int write = (int)SetTempF;
                     int x = (write / 10U) % 10;
                     int y = (write / 1U) % 10;
+
                     sevseg.writeDigitNum(0, x);
                     sevseg.writeDigitNum(1, y);
                     sevseg.writeDigitRaw(3, 0b01100011);
@@ -348,9 +356,11 @@ void SetLights()
     sevseg.blinkRate(2);
     sevseg.writeDigitNum(4, LightMode);
     sevseg.writeDisplay();
-    //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
 
+    //  Flag for changing LEDs
     bool change = 0;
+
+    //  Put into While loop that looks for main button press, once button press
     while (digitalRead(MainButton) == HIGH)
     {
         // Taking the current state of the buttons
@@ -370,9 +380,12 @@ void SetLights()
                 if (LightMode != 4)
                 {
                     LightMode += 1;
+                    //  Print to 7 segment
                     sevseg.writeDigitNum(4, LightMode);
                     sevseg.writeDisplay();
+                    //  Flip flag
                     change = 1;
+                    //  If debug enabled, print to serial port
                     if (debug == 1 || debug == 2)
                     {
                         Serial.println(LightMode);
@@ -394,9 +407,12 @@ void SetLights()
                 if (LightMode != 0)
                 {
                     LightMode -= 1;
+                    //  Print to 7 segment
                     sevseg.writeDigitNum(4, LightMode);
                     sevseg.writeDisplay();
+                    //  Flip Flag
                     change = 1;
+                    //  If debug enabled, print to serial port
                     if (debug == 1 || debug == 2)
                     {
                         Serial.println(LightMode);
@@ -405,9 +421,12 @@ void SetLights()
             }
         }
         delay(250);
+        //  Change the LED if flag up
         if (change == 1)
         {
+            //  Reset Flag
             change = 0;
+            //  Call LightMode
             LED(LightMode);
         }
     }
@@ -415,12 +434,22 @@ void SetLights()
 }
 void SetUnits()
 {
-    delay(500);
-    // Blink 7 segment
+    // Blink 7 segment and Pre-load
+    sevseg.clear();
     sevseg.blinkRate(2);
+    if (UnitsMode == 1)
+    {
+        sevseg.writeDigitRaw(3, 0b01100011);
+        sevseg.writeDigitNum(4, 12);
+    }
+    else if (UnitsMode == 2)
+    {
+        sevseg.writeDigitRaw(3, 0b01100011);
+        sevseg.writeDigitNum(4, 15);
+    }
     sevseg.writeDisplay();
-    //  Put into While loop that looks for main button press, once button press: send to eeprom (put counter), send to LED program?
 
+    //  Put into While loop that looks for main button press, once button press
     while (digitalRead(MainButton) == HIGH)
     {
         // Taking the current state of the buttons
@@ -444,6 +473,9 @@ void SetUnits()
                     {
                         Serial.println("°F");
                     }
+                    sevseg.writeDigitRaw(3, 0b01100011);
+                    sevseg.writeDigitNum(4, 15);
+                    sevseg.writeDisplay();
                 }
             }
         }
@@ -465,6 +497,9 @@ void SetUnits()
                     {
                         Serial.println("°C");
                     }
+                    sevseg.writeDigitRaw(3, 0b01100011);
+                    sevseg.writeDigitNum(4, 12);
+                    sevseg.writeDisplay();
                 }
             }
         }
@@ -483,6 +518,109 @@ void SetUnits()
 
     //  Resetting Previous Units
     prevUnit = UnitsMode;
+
+    //send to eeprom (put counter)
+
+    return;
+}
+void SetBrightness()
+{
+    // Blink 7 segment
+    sevseg.clear();
+    sevseg.blinkRate(2);
+
+    int x = (Brightness / 10U) % 10;
+    int y = (Brightness / 1U) % 10;
+    if (x != 0)
+    {
+        sevseg.writeDigitNum(3, x);
+    }
+    sevseg.writeDigitNum(4, y);
+    sevseg.writeDisplay();
+
+    //  Flag for setting Brightness
+    bool change = 0;
+
+    //  Put into While loop that looks for main button press, once button press
+    while (digitalRead(MainButton) == HIGH)
+    {
+        // Taking the current state of the buttons
+        currentStateUp = digitalRead(buttonUp);
+        currentStateDown = digitalRead(buttonDown);
+        // If Up button depressed
+        if (currentStateUp == LOW)
+        {
+            //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+            if (currentStateUp != lastFlickUp)
+            {
+                lastDebouneUp = millis();     //  reset the debounce timer
+                lastFlickUp = currentStateUp; //  save the last flicker state
+            }
+            if ((millis() - lastDebouneUp) > debounceDelay)
+            {
+                if (Brightness != 15)
+                {
+                    Brightness += 1;
+                    //  Print to 7 segment
+                    int x = (Brightness / 10U) % 10;
+                    int y = (Brightness / 1U) % 10;
+
+                    sevseg.writeDigitNum(3, x);
+
+                    sevseg.writeDigitNum(4, y);
+                    sevseg.writeDisplay();
+                    //  Flip Flag
+                    change = 1;
+                    //  If debug enabled, print to serial port
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println(Brightness);
+                    }
+                }
+            }
+        }
+
+        // If Down button depressed
+        if (currentStateDown == LOW)
+        {
+            //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+            if (currentStateDown != lastFlickDown)
+            {
+                lastDebouneDown = millis();       //  reset the debounce timer
+                lastFlickDown = currentStateDown; //  save the last flicker state
+            }
+            if ((millis() - lastDebouneDown) > debounceDelay)
+            {
+                if (Brightness != 0)
+                {
+                    Brightness -= 1;
+                    //  Print to 7 segment
+                    int x = (Brightness / 10U) % 10;
+                    int y = (Brightness / 1U) % 10;
+
+                    sevseg.writeDigitNum(3, x);
+                    sevseg.writeDigitNum(4, y);
+                    sevseg.writeDisplay();
+                    //  Flip Flag
+                    change = 1;
+                    //  If debug enabled, print to serial port
+                    if (debug == 1 || debug == 2)
+                    {
+                        Serial.println(Brightness);
+                    }
+                }
+            }
+        }
+        delay(250);
+        //  Change the Brightness if flag up
+        if (change == 1)
+        {
+            //  Reset Flag
+            change = 0;
+            //  Call LightMode
+            sevseg.setBrightness(Brightness);
+        }
+    }
     return;
 }
 bool TempCorrect()
@@ -753,7 +891,7 @@ void MenuSelect()
     bool doOnce1 = 1, doOnce2 = 1, doOnce3 = 1, doOnce4 = 1;
     while (digitalRead(MainButton) == LOW) //  Loop until the main button goes low
     {
-        if ((millis() - startMillisMain) <= 2000)
+        if ((millis() - startMillisMain) <= 1000)
         {
 
             if (doOnce1 == 1)
@@ -769,7 +907,7 @@ void MenuSelect()
                 doOnce1 = 0;
             }
         }
-        else if ((millis() - startMillisMain) <= 4000 && (millis() - startMillisMain) > 2000)
+        else if ((millis() - startMillisMain) <= 2000 && (millis() - startMillisMain) > 1000)
         {
 
             if (doOnce2 == 1)
@@ -785,7 +923,7 @@ void MenuSelect()
                 doOnce2 = 0;
             }
         }
-        else if ((millis() - startMillisMain) <= 6000 && (millis() - startMillisMain) > 4000)
+        else if ((millis() - startMillisMain) <= 3000 && (millis() - startMillisMain) > 2000)
         {
 
             if (doOnce3 == 1)
@@ -825,23 +963,23 @@ void MenuSelect()
     //if main button pressed longer than 5 seconds, go to units
     if ((endMillisMain - startMillisMain) <= 1000)
     {
-        delay(1000);
+        delay(250);
         SetTempInput();
     }
-    else if ((endMillisMain - startMillisMain) <= 4000 && (endMillisMain - startMillisMain) > 1000)
+    else if ((endMillisMain - startMillisMain) <= 2000 && (endMillisMain - startMillisMain) > 1000)
     {
-        delay(1000);
+        delay(250);
         SetLights();
     }
-    else if ((endMillisMain - startMillisMain) <= 6000 && (endMillisMain - startMillisMain) > 4000)
+    else if ((endMillisMain - startMillisMain) <= 3000 && (endMillisMain - startMillisMain) > 2000)
     {
-        delay(1000);
+        delay(250);
         SetUnits();
     }
     else
     {
-        delay(1000);
-        //SetBrightness();
+        delay(250);
+        SetBrightness();
     }
 
     sevseg.blinkRate(0);
@@ -903,29 +1041,6 @@ void loop()
 }
 
 /*
-Add task scheduler to code to allow for background processes
-GetTemp and TempCorrection to run every minute
-SetTempInput to only run on button press, clear after short button press or 5 second timeout
-SetLightColor to only run on long button press, clear after long button press or 5 second timout
-
-URL for article on task scheduling
-https://create.arduino.cc/projecthub/GadgetsToGrow/don-t-delay-use-an-arduino-task-scheduler-today-215cfe
-
-GitHub for task Scheduling
-https://github.com/gadgetstogrow/TaskScheduler
-
-Task Scheduler Original Code
-http://bleaklow.com/2010/07/20/a_very_simple_arduino_task_manager.html
-
-Advanced Task Scheduler 
-https://github.com/arkhipenko/TaskScheduler
-
-Interupts
-https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
-
-7 Seg
-https://github.com/sparkfun/SevSeg
-
 RGB LED
 https://github.com/wilmouths/RGBLed
 

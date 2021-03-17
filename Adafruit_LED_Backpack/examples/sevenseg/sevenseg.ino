@@ -62,6 +62,8 @@ void loop()
   matrix.writeDigitNum(4,12);
   matrix.writeDisplay();
 
+  matrix.setBrightness(5);
+
   // // try to print a number thats too long
   // matrix.print(10000, DEC);
   // matrix.writeDisplay();
