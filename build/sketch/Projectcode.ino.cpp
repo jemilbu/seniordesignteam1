@@ -6,9 +6,9 @@
 #include "Adafruit_LEDBackpack.h"
 #include <Wire.h>
 
-//#define debug 3   //  Data Output
+#define debug 3   //  Data Output
 //#define debug 2 //  Only necassary Serial Print
-#define debug 1 //  All Serial Print
+//#define debug 1 //  All Serial Print
 //#define debug 0   //  No Serial Print
 
 // Button Pins
@@ -74,12 +74,16 @@ void SetUnits();
 #line 502 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetBrightness();
 #line 602 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+void DoorISR();
+#line 605 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+void DoorLight();
+#line 608 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 bool TempCorrect();
-#line 858 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 864 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void MenuSelect();
-#line 966 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 972 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void setup();
-#line 997 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 1003 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void loop();
 #line 61 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp()
@@ -623,6 +627,12 @@ void SetBrightness()
     }
     return;
 }
+void DoorISR()
+{
+}
+void DoorLight()
+{
+}
 bool TempCorrect()
 {
     float Temp = GetTemp();
@@ -1036,6 +1046,10 @@ void loop()
     {
         MenuSelect();
     }
+
+    //  If Door ISR flag is flipped, go turn on the lights
+    //  Reset Flag
+
     //  Tiny delay to help with flicking
     delay(500);
 }
