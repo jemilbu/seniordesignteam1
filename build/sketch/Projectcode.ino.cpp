@@ -6,9 +6,9 @@
 #include "Adafruit_LEDBackpack.h"
 #include <Wire.h>
 
-#define debug 3   //  Data Output
+//define debug 3   //  Data Output
 //#define debug 2 //  Only necassary Serial Print
-//#define debug 1 //  All Serial Print
+#define debug 1 //  All Serial Print
 //#define debug 0   //  No Serial Print
 
 // Button Pins
@@ -1051,7 +1051,7 @@ void loop()
     //  Reset Flag
 
     //  Tiny delay to help with flicking
-    delay(500);
+    delay(5);
 }
 
 /*
