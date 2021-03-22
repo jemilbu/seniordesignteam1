@@ -1,0 +1,20 @@
+c:\Users\Owner\Pictures\VSCode\seniordesignteam1\build\sketch\Projectcode.ino.cpp.o: \
+ c:\Users\Owner\Pictures\VSCode\seniordesignteam1\build\sketch\Projectcode.ino.cpp \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Arduino.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/binary.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/WCharacter.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/WString.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/HardwareSerial.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Stream.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Print.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Printable.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/USBAPI.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Arduino.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\variants\mega/pins_arduino.h \
+ C:\arduino-1.8.9\libraries\RGBLed\src/RGBLed.h \
+ C:\arduino-1.8.9\libraries\Adafruit_LED_Backpack\src/Adafruit_LEDBackpack.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\libraries\Wire\src/Wire.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Stream.h \
+ C:\arduino-1.8.9\libraries\Adafruit_GFX_Library\src/Adafruit_GFX.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Print.h \
+ C:\arduino-1.8.9\libraries\Adafruit_GFX_Library\src/gfxfont.h
