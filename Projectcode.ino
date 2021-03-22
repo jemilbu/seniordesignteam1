@@ -644,7 +644,7 @@ bool TempCorrect()
         else if ((Temp - SetTempC) < -5.0)
         {
             //  Switch cooling flag to heating
-            cooling = 0;
+            // cooling = 0;
             //  Show heating on debug
             if (debug == 1 || debug == 2)
             {
@@ -761,7 +761,7 @@ bool TempCorrect()
         else if ((Temp - SetTempF) < -10.0)
         {
             //  Switch cooling flag to heating
-            cooling = 0;
+            //cooling = 0;
             //  Show heating on debug
             if (debug == 1 || debug == 2)
             {
@@ -1003,6 +1003,7 @@ void setup()
 void loop()
 {
     unsigned long currentMillis = millis();
+
     //  Only check the temperature every 5 seconds
     if ((currentMillis - previousMillis) >= 5000)
     {
@@ -1016,14 +1017,20 @@ void loop()
     //  Go to the Menu if the Menu button is pressed
     if (digitalRead(MainButton) == LOW)
     {
-        MenuSelect();
+        currentStateMain = digitalRead(MainButton);
+        //  Checking that there has been enough time betwwen a switch to ignore bounce and noise
+        if (currentStateUp != lastFlickUp)
+        {
+            lastDebouneUp = millis();     //  reset the debounce timer
+            lastFlickUp = currentStateUp; //  save the last flicker state
+        }
+        if ((millis() - lastDebouneUp) > debounceDelay)
+        {
+            MenuSelect();
+        }
     }
-
-    //  If Door ISR flag is flipped, go turn on the lights
-    //  Reset Flag
-
-    //  Tiny delay to help with flicking
-    delay(5);
+    //  Delay to Prevent Display overwrite
+    delay(500);
 }
 
 /*
