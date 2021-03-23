@@ -981,9 +981,9 @@ void setup()
     pinMode(ThermoElecA, OUTPUT);
     pinMode(ThermoElecB, OUTPUT);
     pinMode(savePower, OUTPUT);
-    pinMode(ledR, OUTPUT);
-    pinMode(ledB, OUTPUT);
-    pinMode(ledG, OUTPUT);
+    pinMode(ledR, INPUT);
+    pinMode(ledB, INPUT);
+    pinMode(ledG, InPUT);
     pinMode(speed, OUTPUT);
     pinMode(direct, OUTPUT);
 
