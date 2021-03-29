@@ -5,9 +5,9 @@
 # 4 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino" 2
 # 5 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino" 2
 
-//define debug 3   //  Data Output
-//#define debug 2 //  Only necassary Serial Print
 
+//#define debug 2 //  Only necassary Serial Print
+//#define debug 1 //  All Serial Print
 //#define debug 0   //  No Serial Print
 
 // Button Pins
@@ -79,18 +79,18 @@ int GetTemp()
     float TthermAvg = Ttherm1;
 
     // Print temp to Serial Monitor
-    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2 || 1 /*  All Serial Print*/ == 3)
+    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2 || 3 /*  Data Output*/ == 3)
     {
         Serial.print("Current Temp = ");
     }
     if (UnitsMode == 1)
     {
         //  Print Temp to Serial Monitor
-        if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2 || 1 /*  All Serial Print*/ == 3)
+        if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2 || 3 /*  Data Output*/ == 3)
         {
             Serial.print(TthermAvg);
         }
-        if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2 || 1 /*  All Serial Print*/ == 3)
+        if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2 || 3 /*  Data Output*/ == 3)
         {
             Serial.println("°C");
         }
@@ -130,11 +130,11 @@ int GetTemp()
         sevseg.writeDigitNum(4, 15);
         sevseg.writeDisplay();
 
-        if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2 || 1 /*  All Serial Print*/ == 3)
+        if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2 || 3 /*  Data Output*/ == 3)
         {
             Serial.print(TthermF);
         }
-        if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2 || 1 /*  All Serial Print*/ == 3)
+        if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2 || 3 /*  Data Output*/ == 3)
         {
             Serial.println("°F");
         }
@@ -236,7 +236,7 @@ void SetTempInput()
                     {
                         SetTempC += 1;
                         //  If debug mode 1 or 2 enabled, print to serial port
-                        if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                        if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                         {
                             Serial.println(SetTempC, 0);
                         }
@@ -258,7 +258,7 @@ void SetTempInput()
                     if (SetTempF != 176) // Farenheit
                     {
                         SetTempF += 1;
-                        if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                        if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                         {
                             Serial.println(SetTempF, 0);
                         }
@@ -284,7 +284,7 @@ void SetTempInput()
                 if (SetTempC != 0) // Celcius
                 {
                     SetTempC -= 1;
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println(SetTempC, 0);
                     }
@@ -306,7 +306,7 @@ void SetTempInput()
                 if (SetTempF != 32) // Farenheit
                 {
                     SetTempF -= 1;
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println(SetTempF, 0);
                     }
@@ -364,7 +364,7 @@ void SetLights()
                     //  Flip flag
                     change = 1;
                     //  If debug enabled, print to serial port
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println(LightMode);
                     }
@@ -391,7 +391,7 @@ void SetLights()
                     //  Flip Flag
                     change = 1;
                     //  If debug enabled, print to serial port
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println(LightMode);
                     }
@@ -447,7 +447,7 @@ void SetUnits()
                 if (UnitsMode != 2)
                 {
                     UnitsMode += 1;
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println("°F");
                     }
@@ -471,7 +471,7 @@ void SetUnits()
                 if (UnitsMode != 1)
                 {
                     UnitsMode -= 1;
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println("°C");
                     }
@@ -550,7 +550,7 @@ void SetBrightness()
                     //  Flip Flag
                     change = 1;
                     //  If debug enabled, print to serial port
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println(Brightness);
                     }
@@ -582,7 +582,7 @@ void SetBrightness()
                     //  Flip Flag
                     change = 1;
                     //  If debug enabled, print to serial port
-                    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                     {
                         Serial.println(Brightness);
                     }
@@ -637,7 +637,7 @@ bool TempCorrect()
             //  Switch cooling flag to cooling
             cooling = 1;
             //  Show cooling on debug
-            if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
                 Serial.println("Cooling");
             }
@@ -646,11 +646,11 @@ bool TempCorrect()
         else if ((Temp - SetTempC) < -5.0)
         {
             //  Switch cooling flag to heating
-            // cooling = 0;
+            cooling = 0;
             //  Show heating on debug
-            if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
-                Serial.println("Heating");
+                Serial.println("Heating has been disabled");
             }
         }
         else
@@ -659,7 +659,7 @@ bool TempCorrect()
             analogWrite(ThermoElecA, 0);
             analogWrite(ThermoElecB, 0);
             //  Show off on debug
-            if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
                 Serial.println("Off");
             }
@@ -681,7 +681,7 @@ bool TempCorrect()
                     bang = true;
                 }
                 //  Show cooling to set point
-                if (1 /*  All Serial Print*/ == 1)
+                if (3 /*  Data Output*/ == 1)
                 {
                     Serial.println("Cooling Down to Setpoint-1");
                 }
@@ -698,7 +698,7 @@ bool TempCorrect()
                     bang = false;
                 }
                 //  Show off until past set point
-                if (1 /*  All Serial Print*/ == 1)
+                if (3 /*  Data Output*/ == 1)
                 {
                     Serial.println("Turning Off until Setpoint +1");
                 }
@@ -708,40 +708,53 @@ bool TempCorrect()
         //  If heating has been enabled
         if (cooling == 0)
         {
-            //  If we are above set temperature by 5 or have not reached the set temp yet
-            if (bang == true)
+            // //  If we are above set temperature by 5 or have not reached the set temp yet
+            // if (bang == true)
+            // {
+            //     //  Turn on the TEC
+            //     analogWrite(ThermoElecA, 255);
+            //     analogWrite(ThermoElecB, 0);
+            //     //  If we go above the set point
+            //     if ((Temp - SetTempC) == 1.0)
+            //     {
+            //         //  Switch the controller flag
+            //         bang = false;
+            //     }
+            //     //  Show heating to set point
+            //     if (debug == 1)
+            //     {
+            //         Serial.println("Heating up to Setpoint +1");
+            //     }
+            // }
+            // //  If we are above the set point
+            // else if (bang == false)
+            // {
+            //     //  Turn off the TEC
+            //     analogWrite(ThermoElecA, 0);
+            //     analogWrite(ThermoElecB, 0);
+            //     //  If we are below the set point or have switched from cooling
+            //     if ((Temp - SetTempC) == -1.0 || (Temp - SetTempC) < -5.0)
+            //     {
+            //         bang = true;
+            //     }
+            //     //  Show off until past set point
+            //     if (debug == 1)
+            //     {
+            //         Serial.println("Turning Off until Setpoint -1");
+            //     }
+            // }
+            //  Turn off the TEC
+            analogWrite(ThermoElecA, 0);
+            analogWrite(ThermoElecB, 0);
+            //  Show off on debug
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
-                //  Turn on the TEC
-                analogWrite(ThermoElecA, 255);
-                analogWrite(ThermoElecB, 0);
-                //  If we go above the set point
-                if ((Temp - SetTempC) == 1.0)
-                {
-                    //  Switch the controller flag
-                    bang = false;
-                }
-                //  Show heating to set point
-                if (1 /*  All Serial Print*/ == 1)
-                {
-                    Serial.println("Heating up to Setpoint +1");
-                }
+                Serial.println("Off");
             }
-            //  If we are above the set point
-            else if (bang == false)
+            return 0;
+            if (3 /*  Data Output*/ == 1)
             {
-                //  Turn off the TEC
-                analogWrite(ThermoElecA, 0);
-                analogWrite(ThermoElecB, 0);
-                //  If we are below the set point or have switched from cooling
-                if ((Temp - SetTempC) == -1.0 || (Temp - SetTempC) < -5.0)
-                {
-                    bang = true;
-                }
-                //  Show off until past set point
-                if (1 /*  All Serial Print*/ == 1)
-                {
-                    Serial.println("Turning Off until Setpoint -1");
-                }
+                Serial.println("Heating Off");
             }
         }
     }
@@ -754,7 +767,7 @@ bool TempCorrect()
             //  Switch cooling flag to cooling
             cooling = 1;
             //  Show cooling on debug
-            if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
                 Serial.println("Cooling");
             }
@@ -763,9 +776,9 @@ bool TempCorrect()
         else if ((Temp - SetTempF) < -10.0)
         {
             //  Switch cooling flag to heating
-            //cooling = 0;
+            cooling = 0;
             //  Show heating on debug
-            if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
                 Serial.println("Heating");
             }
@@ -776,7 +789,7 @@ bool TempCorrect()
             analogWrite(ThermoElecA, 0);
             analogWrite(ThermoElecB, 0);
             //  Show off on debug
-            if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
                 Serial.println("Off");
             }
@@ -798,7 +811,7 @@ bool TempCorrect()
                     bang = true;
                 }
                 //  Show cooling to set point
-                if (1 /*  All Serial Print*/ == 1)
+                if (3 /*  Data Output*/ == 1)
                 {
                     Serial.println("Cooling Down to Setpoint-1");
                 }
@@ -815,7 +828,7 @@ bool TempCorrect()
                     bang = false;
                 }
                 //  Show off until past set point
-                if (1 /*  All Serial Print*/ == 1)
+                if (3 /*  Data Output*/ == 1)
                 {
                     Serial.println("Turning Off until Setpoint +1");
                 }
@@ -825,47 +838,60 @@ bool TempCorrect()
         //  If heating has been enabled
         if (cooling == 0)
         {
-            //  If we are above set temperature by 5 or have not reached the set temp yet
-            if (bang == true)
+            // //  If we are above set temperature by 5 or have not reached the set temp yet
+            // if (bang == true)
+            // {
+            //     //  Turn on the TEC
+            //     analogWrite(ThermoElecA, 255);
+            //     analogWrite(ThermoElecB, 0);
+            //     //  If we go above the set point
+            //     if ((Temp - SetTempF) == 1.0)
+            //     {
+            //         //  Switch the controller flag
+            //         bang = false;
+            //     }
+            //     //  Show heating to set point
+            //     if (debug == 1)
+            //     {
+            //         Serial.println("Heating up to Setpoint+1");
+            //     }
+            // }
+            // //  If we are above the set point
+            // else if (bang == false)
+            // {
+            //     //  Turn off the TEC
+            //     analogWrite(ThermoElecA, 0);
+            //     analogWrite(ThermoElecB, 0);
+            //     //  If we are below the set point or have switched from cooling
+            //     if ((Temp - SetTempF) == -1.0 || (Temp - SetTempF) < -5.0)
+            //     {
+            //         bang = true;
+            //     }
+            //     //  Show off until past set point
+            //     if (debug == 1)
+            //     {
+            //         Serial.println("Turning Off until Setpoint -1");
+            //     }
+            // }
+            //  Turn off the TEC
+            analogWrite(ThermoElecA, 0);
+            analogWrite(ThermoElecB, 0);
+            //  Show off on debug
+            if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
             {
-                //  Turn on the TEC
-                analogWrite(ThermoElecA, 255);
-                analogWrite(ThermoElecB, 0);
-                //  If we go above the set point
-                if ((Temp - SetTempF) == 1.0)
-                {
-                    //  Switch the controller flag
-                    bang = false;
-                }
-                //  Show heating to set point
-                if (1 /*  All Serial Print*/ == 1)
-                {
-                    Serial.println("Heating up to Setpoint+1");
-                }
+                Serial.println("Off");
             }
-            //  If we are above the set point
-            else if (bang == false)
+            return 0;
+            if (3 /*  Data Output*/ == 1)
             {
-                //  Turn off the TEC
-                analogWrite(ThermoElecA, 0);
-                analogWrite(ThermoElecB, 0);
-                //  If we are below the set point or have switched from cooling
-                if ((Temp - SetTempF) == -1.0 || (Temp - SetTempF) < -5.0)
-                {
-                    bang = true;
-                }
-                //  Show off until past set point
-                if (1 /*  All Serial Print*/ == 1)
-                {
-                    Serial.println("Turning Off until Setpoint -1");
-                }
+                Serial.println("Heating Off");
             }
         }
     }
 }
 void MenuSelect()
 {
-    if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+    if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
     {
         Serial.println("Menu");
     }
@@ -880,7 +906,7 @@ void MenuSelect()
 
             if (doOnce1 == 1)
             {
-                if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                 {
                     Serial.println("Set Temp");
                 }
@@ -896,7 +922,7 @@ void MenuSelect()
 
             if (doOnce2 == 1)
             {
-                if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                 {
                     Serial.println("Set Lights");
                 }
@@ -912,7 +938,7 @@ void MenuSelect()
 
             if (doOnce3 == 1)
             {
-                if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                 {
                     Serial.println("Set Units");
                 }
@@ -927,7 +953,7 @@ void MenuSelect()
         {
             if (doOnce4 == 1)
             {
-                if (1 /*  All Serial Print*/ == 1 || 1 /*  All Serial Print*/ == 2)
+                if (3 /*  Data Output*/ == 1 || 3 /*  Data Output*/ == 2)
                 {
                     Serial.println("Set Brightness");
                 }
@@ -1007,9 +1033,9 @@ void loop()
     unsigned long currentMillis = millis();
 
     //  Only check the temperature every 5 seconds
-    if ((currentMillis - previousMillis) >= 5000)
+    if ((currentMillis - previousMillis) >= 1000)
     {
-        if (1 /*  All Serial Print*/ == 3)
+        if (3 /*  Data Output*/ == 3)
         {
             Serial.print((millis() - time) / 1000);
         }
