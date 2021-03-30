@@ -17,4 +17,5 @@ c:\Users\Owner\Pictures\VSCode\seniordesignteam1\build\sketch\Projectcode.ino.cp
  C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Stream.h \
  C:\arduino-1.8.9\libraries\Adafruit_GFX_Library\src/Adafruit_GFX.h \
  C:\arduino-1.8.9\hardware\arduino\avr\cores\arduino/Print.h \
- C:\arduino-1.8.9\libraries\Adafruit_GFX_Library\src/gfxfont.h
+ C:\arduino-1.8.9\libraries\Adafruit_GFX_Library\src/gfxfont.h \
+ C:\arduino-1.8.9\hardware\arduino\avr\libraries\EEPROM\src/EEPROM.h

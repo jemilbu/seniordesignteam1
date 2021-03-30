@@ -1,37 +1,44 @@
 #include <Arduino.h>
 #line 1 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 #line 1 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
-//#include <EEPROM.h>
 #include <RGBLed.h>
 #include "Adafruit_LEDBackpack.h"
 #include <Wire.h>
+#include <EEPROM.h>
 
-#define debug 3   //  Data Output
+//  Creating Instance of the EEPROMClass
+EEPROMClass hard;
+//  The last time EEPROM was stored
+volatile uint16_t eeTime;
+
+//  Selecting Serial Output Type
+//#define debug 3   //  Data Output
 //#define debug 2 //  Only necassary Serial Print
-//#define debug 1 //  All Serial Print
-//#define debug 0   //  No Serial Print
+#define debug 1 //  All Serial Print
+//#define debug 0 //  No Serial Print
 
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
 const int ledR = 26, ledB = 22, ledG = 24;
-// Thermoelectric LED Test Pin
-const int ThermoElecLED = 30;
 // Thermoelectric Control Pins
-const int ThermoElecA = 45, ThermoElecB = 46, savePower = 31;
+const int RelayControl = 45;
 // Thermistor Pins
 const int Thermistor1 = A0, Thermistor2 = A1;
-//  Global Set Temperature, Thermistor Temp and Light Mode
+// Door Switch Pin
+const int door = 50;
+
+//  Default Set Temperature, Light Mode, Units, and Brightness
 volatile float SetTempC = 0, SetTempF = 32;
-// Global Mode
 volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1, Brightness = 15;
+
 //  Global Time constants
-unsigned long time;
-unsigned long previousMillis = 0;
+unsigned long time, previousMillis = 0;
 
 //  Thermoelectric Motor Driver pins
 const int speed = 0, direct = 0;
 
+//  Debounce for buttons Setup
 volatile int currentStateUp;     //  State of push button 1
 volatile int currentStateDown;   //  State of push button 2
 volatile int currentStateMain;   //  State of push button 3
@@ -51,9 +58,8 @@ unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 
 unsigned long previousMillisMain = 0; // Stores the main was pressed
 
-//  Bool Flag for control
-volatile bool bang;
-volatile bool cooling;
+//  Bool Flags for Temperature control
+volatile bool bang, cooling;
 
 //  Create an instance of the RGB object
 RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
@@ -61,48 +67,50 @@ RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
 //  Creating an instance of the 7 segment object
 Adafruit_7segment sevseg = Adafruit_7segment();
 
-#line 61 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 67 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp();
-#line 142 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 154 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void LED(int mode);
-#line 178 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 190 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetTempInput();
-#line 328 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 364 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetLights();
-#line 411 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 458 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetUnits();
-#line 502 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 558 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetBrightness();
-#line 602 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
-void DoorISR();
-#line 605 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 669 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void DoorLight();
-#line 608 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 676 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 bool TempCorrect();
-#line 890 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 937 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void MenuSelect();
-#line 998 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 1045 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void setup();
-#line 1029 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 1140 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void loop();
-#line 61 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 67 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp()
 {
-    float sensorvalue = analogRead(Thermistor1);                                                                          //Read Pin A0
-    float voltage = sensorvalue * (5.0 / 1023.0);                                                                         //convert sensor value to voltage
-    float Rtherm = ((50 / voltage) - 10) * 1000;                                                                          //Calculates thermistor resistance in Ohm
-    float tempK = 1 / (0.001032 + (0.0002387 * log(Rtherm)) + (0.000000158 * (log(Rtherm) * log(Rtherm) * log(Rtherm)))); //calculates associated temp in k
+    float sensorvalue = analogRead(Thermistor1);     //  Read the input bin of thermistor 1
+    float voltage = sensorvalue * (5.0 / 1023.0);    //  Convert to voltage
+    float Rtherm = ((5.0 / voltage) - 1.0) * 5000.0; //   Calculate the resistance in Ohms
+
+    float tempK = 1.0 / (0.00147336 + (0.000204516 * log(Rtherm)) + (0.00000023771643 * (log(Rtherm) * log(Rtherm) * log(Rtherm))));
+    //  Calculate the temperature in degrees Kelvin
+
+    float sensorvalue2 = analogRead(Thermistor2);      //  Read the input bin of thermistor 2
+    float voltage2 = sensorvalue2 * (5.0 / 1023.0);    //  Convert to voltage
+    float Rtherm2 = ((5.0 / voltage2) - 1.0) * 5000.0; //   Calculate the resistance in Ohms
+
+    float tempK2 = 1.0 / (0.00147336 + (0.000204516 * log(Rtherm2)) + (0.00000023771643 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //  Calculate the temperature in degrees Kelvin
+
+    //  Convert to degress Celcius
     float Ttherm1 = tempK - 273.15;
+    float Ttherm2 = tempK2 - 273.15;
 
-    // float sensorvalue2 = analogRead(Thermistor2);                                                                              //Read Pin A0
-    // float voltage2 = sensorvalue2 * (5.0 / 1023.0);                                                                            //convert sensor value to voltage
-    // float Rtherm2 = ((50 / voltage2) - 10) * 1000;                                                                             //Calculates thermistor resistance in Ohm
-    // float tempK2 = 1 / (0.001032 + (0.0002387 * log(Rtherm2)) + (0.000000158 * (log(Rtherm2) * log(Rtherm2) * log(Rtherm2)))); //calculates associated temp in k
-    // float Ttherm2 = tempK2 - 273.15;
-
-    // float TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
-
-    float TthermAvg = Ttherm1;
+    //  Calculate the average of the two thermistors to use as the actual temperature
+    float TthermAvg = (Ttherm1 + Ttherm2) / 2.0;
 
     // Print temp to Serial Monitor
     if (debug == 1 || debug == 2 || debug == 3)
@@ -129,10 +137,10 @@ int GetTemp()
         int y = (temp / 1U) % 10;
 
         //  Printing to 7 segment
-        sevseg.writeDigitNum(0, x);
-        sevseg.writeDigitNum(1, y);
-        sevseg.writeDigitRaw(3, 0b01100011);
-        sevseg.writeDigitNum(4, 12);
+        sevseg.writeDigitNum(0, x);          //  First Digit
+        sevseg.writeDigitNum(1, y);          //  Second Digit
+        sevseg.writeDigitRaw(3, 0b01100011); //  Degrees Symbol
+        sevseg.writeDigitNum(4, 12);         //  C
         sevseg.writeDisplay();
         return TthermAvg;
     }
@@ -142,20 +150,7 @@ int GetTemp()
         //  Converting from °C to °F
         float TthermF = (TthermAvg * (9.0 / 5.0)) + 32.0;
 
-        //  Converting from float to int
-        int temp = (int)TthermF;
-
-        //  Extracting Digits
-        int x = (temp / 10U) % 10;
-        int y = (temp / 1U) % 10;
-
-        //  Printing to 7 segment
-        sevseg.writeDigitNum(0, x);
-        sevseg.writeDigitNum(1, y);
-        sevseg.writeDigitRaw(3, 0b01100011);
-        sevseg.writeDigitNum(4, 15);
-        sevseg.writeDisplay();
-
+        //  Print temp to serial port if enabled
         if (debug == 1 || debug == 2 || debug == 3)
         {
             Serial.print(TthermF);
@@ -164,15 +159,30 @@ int GetTemp()
         {
             Serial.println("°F");
         }
+
+        //  Converting from float to int
+        int temp = (int)TthermF;
+
+        //  Extracting Digits
+        int x = (temp / 10U) % 10;
+        int y = (temp / 1U) % 10;
+
+        //  Printing to 7 segment
+        sevseg.writeDigitNum(0, x);          //  First Digit
+        sevseg.writeDigitNum(1, y);          //  Second Digit
+        sevseg.writeDigitRaw(3, 0b01100011); //  Degrees Symbol
+        sevseg.writeDigitNum(4, 15);         //  F
+        sevseg.writeDisplay();
+
         return TthermF;
     }
 }
 void LED(int mode)
 {
-    // Turn all Off
-    digitalWrite(ledR, HIGH);
-    digitalWrite(ledG, HIGH);
-    digitalWrite(ledB, HIGH);
+    // //Turn all Off
+    // digitalWrite(ledR, HIGH);
+    // digitalWrite(ledG, HIGH);
+    // digitalWrite(ledB, HIGH);
     //  Off Mode
     if (mode == 0)
     {
@@ -351,6 +361,30 @@ void SetTempInput()
         }
         delay(250);
     }
+    //  Send to EEPROM
+    if (millis() - eeTime > 10)
+    {
+        if (UnitsMode == 1)
+        {
+            hard.update(0, SetTempC);
+            eeTime = millis();
+            //  If debug enabled, print to serial port
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("EEPROM Store Celcius");
+            }
+        }
+        else if (UnitsMode == 2)
+        {
+            hard.update(1, SetTempF);
+            eeTime = millis();
+            //  If debug enabled, print to serial port
+            if (debug == 1 || debug == 2)
+            {
+                Serial.println("EEPROM Store Farenheit");
+            }
+        }
+    }
     return;
 }
 void SetLights()
@@ -432,6 +466,17 @@ void SetLights()
             change = 0;
             //  Call LightMode
             LED(LightMode);
+        }
+    }
+    //  Send to EEPROM
+    if (millis() - eeTime > 10)
+    {
+        hard.update(2, LightMode);
+        eeTime = millis();
+        //  If debug enabled, print to serial port
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("EEPROM Store LightMode");
         }
     }
     return;
@@ -523,7 +568,16 @@ void SetUnits()
     //  Resetting Previous Units
     prevUnit = UnitsMode;
 
-    //send to eeprom (put counter)
+    //  Send to EEPROM
+    if (millis() - eeTime > 10)
+    {
+        hard.update(3, UnitsMode);
+        delay(10);
+        hard.update(0, SetTempC);
+        delay(10);
+        hard.update(1, SetTempF);
+        eeTime = millis();
+    }
 
     return;
 }
@@ -625,30 +679,29 @@ void SetBrightness()
             sevseg.setBrightness(Brightness);
         }
     }
+    //  Send to EEPROM
+    if (millis() - eeTime > 10)
+    {
+        hard.update(4, Brightness);
+        eeTime = millis();
+        //  If debug enabled, print to serial port
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("EEPROM Store Brightness");
+        }
+    }
     return;
-}
-void DoorISR()
-{
 }
 void DoorLight()
 {
+    LED(4);
+    while (door != HIGH)
+    {
+    }
 }
 bool TempCorrect()
 {
     float Temp = GetTemp();
-    // Test using LED
-    // if (abs((SetTemp - Ttherm)) > 5)
-    // {
-    //     digitalWrite(ThermoElecLED, HIGH);
-    //     Serial.println("On");
-    //     Serial.println(Ttherm);
-    // }
-    // else
-    // {
-    //     digitalWrite(ThermoElecLED, LOW);
-    //     Serial.println("Off");
-    //     Serial.println(Ttherm);
-    // }
 
     // Actual Function
     // This is where PI control could come into play
@@ -682,8 +735,7 @@ bool TempCorrect()
         else
         {
             //  Turn off the TEC
-            analogWrite(ThermoElecA, 0);
-            analogWrite(ThermoElecB, 0);
+            analogWrite(RelayControl, 0);
             //  Show off on debug
             if (debug == 1 || debug == 2)
             {
@@ -698,8 +750,7 @@ bool TempCorrect()
             if (bang == false)
             {
                 //  Turn on the TEC
-                analogWrite(ThermoElecA, 255);
-                analogWrite(ThermoElecB, 0);
+                analogWrite(RelayControl, 255);
                 //  If we go below the set point
                 if ((Temp - SetTempC) == -1.0)
                 {
@@ -716,8 +767,7 @@ bool TempCorrect()
             else if (bang == true)
             {
                 //  Turn off the TEC
-                analogWrite(ThermoElecA, 0);
-                analogWrite(ThermoElecB, 0);
+                analogWrite(RelayControl, 0);
                 //  If we are above the set point or have switched from heating
                 if ((Temp - SetTempC) == 1.0 || (Temp - SetTempC) >= 0.0)
                 {
@@ -738,7 +788,7 @@ bool TempCorrect()
             // if (bang == true)
             // {
             //     //  Turn on the TEC
-            //     analogWrite(ThermoElecA, 255);
+            //     analogWrite(RelayControl, 255);
             //     analogWrite(ThermoElecB, 0);
             //     //  If we go above the set point
             //     if ((Temp - SetTempC) == 1.0)
@@ -756,7 +806,7 @@ bool TempCorrect()
             // else if (bang == false)
             // {
             //     //  Turn off the TEC
-            //     analogWrite(ThermoElecA, 0);
+            //     analogWrite(RelayControl, 0);
             //     analogWrite(ThermoElecB, 0);
             //     //  If we are below the set point or have switched from cooling
             //     if ((Temp - SetTempC) == -1.0 || (Temp - SetTempC) < -5.0)
@@ -770,8 +820,7 @@ bool TempCorrect()
             //     }
             // }
             //  Turn off the TEC
-            analogWrite(ThermoElecA, 0);
-            analogWrite(ThermoElecB, 0);
+            analogWrite(RelayControl, 0);
             //  Show off on debug
             if (debug == 1 || debug == 2)
             {
@@ -812,8 +861,7 @@ bool TempCorrect()
         else
         {
             //  Turn off the TEC
-            analogWrite(ThermoElecA, 0);
-            analogWrite(ThermoElecB, 0);
+            analogWrite(RelayControl, 0);
             //  Show off on debug
             if (debug == 1 || debug == 2)
             {
@@ -828,8 +876,7 @@ bool TempCorrect()
             if (bang == false)
             {
                 //  Turn on the TEC
-                analogWrite(ThermoElecA, 255);
-                analogWrite(ThermoElecB, 0);
+                analogWrite(RelayControl, 255);
                 //  If we go below the set point
                 if ((Temp - SetTempF) == -1.0)
                 {
@@ -846,8 +893,7 @@ bool TempCorrect()
             else if (bang == true)
             {
                 //  Turn off the TEC
-                analogWrite(ThermoElecA, 0);
-                analogWrite(ThermoElecB, 0);
+                analogWrite(RelayControl, 0);
                 //  If we are above the set point or have switched from heating
                 if ((Temp - SetTempF) == 1.0 || (Temp - SetTempF) >= 0.0)
                 {
@@ -868,7 +914,7 @@ bool TempCorrect()
             // if (bang == true)
             // {
             //     //  Turn on the TEC
-            //     analogWrite(ThermoElecA, 255);
+            //     analogWrite(RelayControl, 255);
             //     analogWrite(ThermoElecB, 0);
             //     //  If we go above the set point
             //     if ((Temp - SetTempF) == 1.0)
@@ -886,7 +932,7 @@ bool TempCorrect()
             // else if (bang == false)
             // {
             //     //  Turn off the TEC
-            //     analogWrite(ThermoElecA, 0);
+            //     analogWrite(RelayControl, 0);
             //     analogWrite(ThermoElecB, 0);
             //     //  If we are below the set point or have switched from cooling
             //     if ((Temp - SetTempF) == -1.0 || (Temp - SetTempF) < -5.0)
@@ -900,8 +946,7 @@ bool TempCorrect()
             //     }
             // }
             //  Turn off the TEC
-            analogWrite(ThermoElecA, 0);
-            analogWrite(ThermoElecB, 0);
+            analogWrite(RelayControl, 0);
             //  Show off on debug
             if (debug == 1 || debug == 2)
             {
@@ -1029,12 +1074,10 @@ void setup()
     pinMode(buttonUp, INPUT_PULLUP);
     pinMode(MainButton, INPUT_PULLUP);
     pinMode(buttonDown, INPUT_PULLUP);
+    pinMode(door, INPUT_PULLUP);
     pinMode(Thermistor1, INPUT);
     pinMode(Thermistor2, INPUT);
-    pinMode(ThermoElecLED, OUTPUT);
-    pinMode(ThermoElecA, OUTPUT);
-    pinMode(ThermoElecB, OUTPUT);
-    pinMode(savePower, OUTPUT);
+    pinMode(RelayControl, OUTPUT);
     pinMode(ledR, OUTPUT);
     pinMode(ledB, OUTPUT);
     pinMode(ledG, OUTPUT);
@@ -1047,7 +1090,73 @@ void setup()
     digitalWrite(ledB, HIGH);
 
     // EEProm set temp recall
+    // Checking if control digit is correct before reading the rest
+    // Will only write values after first startup
+    if (hard.read(5) == 8)
+    {
+        //  Read setpoint of temp in Celcius and check that it is in range before setting
+        uint8_t presetC = hard.read(0);
+        if (presetC >= 0 && presetC <= 100)
+        {
+            SetTempC = presetC;
+            if (debug == 1 || debug == 2)
+            {
+                Serial.print("Preset Celcius = ");
+                Serial.println(presetC);
+            }
+        }
+        //  Read setpoint of temp in Farenheit and check that it is in range before setting
+        uint8_t presetF = hard.read(1);
+        if (presetF >= 0 && presetF <= 100)
+        {
+            SetTempF = presetF;
+            if (debug == 1 || debug == 2)
+            {
+                Serial.print("Preset Farenheit = ");
+                Serial.println(presetF);
+            }
+        }
+        //  Read setpoint of lights and check that it is in range before setting
+        uint8_t presetL = hard.read(2);
+        if (presetL >= 0 && presetL <= 100)
+        {
+            LightMode = presetL;
+            if (debug == 1 || debug == 2)
+            {
+                Serial.print("Preset Light = ");
+                Serial.println(presetL);
+            }
+        }
+        //  Read setpoint of units and check that it is in range before setting
+        uint8_t presetU = hard.read(3);
+        if (presetU >= 0 && presetU <= 100)
+        {
+            UnitsMode = presetU;
+            if (debug == 1 || debug == 2)
+            {
+                Serial.print("Preset Units = ");
+                Serial.println(presetU);
+            }
+        }
+        //  Read setpoint of Brightness and check that it is in range before setting
+        uint8_t presetB = hard.read(4);
+        if (presetB >= 0 && presetB <= 100)
+        {
+            Brightness = presetB;
+            if (debug == 1 || debug == 2)
+            {
+                Serial.print("Preset Brightness = ");
+                Serial.println(presetB);
+            }
+        }
 
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("Not first startup and read values");
+        }
+    }
+    // Switch control digit to designate that this is not the first startup
+    hard.update(5, 8);
     //  Setting up the display
     sevseg.begin(0x70);
 
@@ -1082,6 +1191,13 @@ void loop()
         {
             MenuSelect();
         }
+    }
+    if (digitalRead(door) == LOW)
+    {
+        int prevLight = LightMode;
+        DoorLight();
+        LightMode = prevLight;
+        LED(LightMode);
     }
     //  Delay to Prevent Display overwrite
     delay(500);

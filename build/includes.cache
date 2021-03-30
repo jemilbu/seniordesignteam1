@@ -31,6 +31,11 @@
   },
   {
     "Sourcefile": "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\build\\sketch\\Projectcode.ino.cpp",
+    "Include": "EEPROM.h",
+    "Includepath": "C:\\arduino-1.8.9\\hardware\\arduino\\avr\\libraries\\EEPROM\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\build\\sketch\\Projectcode.ino.cpp",
     "Include": "",
     "Includepath": ""
   },
