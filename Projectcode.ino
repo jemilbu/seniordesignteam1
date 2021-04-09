@@ -17,7 +17,7 @@ volatile uint16_t eeTime;
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
-const int ledR = 26, ledB = 22, ledG = 24;
+const int ledR = 26, ledB = 22, ledG = 24, ledBright = 28;
 // Thermoelectric Control Pins
 const int RelayControl = 45;
 // Thermistor Pins
@@ -31,9 +31,6 @@ volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1, Brightness = 15;
 
 //  Global Time constants
 unsigned long time, previousMillis = 0;
-
-//  Thermoelectric Motor Driver pins
-const int speed = 0, direct = 0;
 
 //  Debounce for buttons Setup
 volatile int currentStateUp;     //  State of push button 1
@@ -58,6 +55,9 @@ unsigned long previousMillisMain = 0; // Stores the main was pressed
 //  Bool Flags for Temperature control
 volatile bool bang, cooling;
 
+//  Door
+volatile int prevLight;
+volatile bool doorWasOpen;
 //  Create an instance of the RGB object
 RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
 
@@ -154,37 +154,54 @@ int GetTemp()
 void LED(int mode)
 {
     // //Turn all Off
-    // digitalWrite(ledR, HIGH);
-    // digitalWrite(ledG, HIGH);
-    // digitalWrite(ledB, HIGH);
+    digitalWrite(ledBright, LOW);
     //  Off Mode
     if (mode == 0)
     {
-        digitalWrite(ledR, HIGH);
-        digitalWrite(ledG, HIGH);
-        digitalWrite(ledB, HIGH);
+        digitalWrite(ledBright, HIGH);
+        digitalWrite(ledR, LOW);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, LOW);
     }
     //  Red
     else if (mode == 1)
     {
-        digitalWrite(ledR, LOW);
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, HIGH);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, LOW);
     }
     //  Green
     else if (mode == 2)
     {
-        digitalWrite(ledG, LOW);
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, LOW);
+        digitalWrite(ledG, HIGH);
+        digitalWrite(ledB, LOW);
     }
     //  Blue
     else if (mode == 3)
     {
-        digitalWrite(ledB, LOW);
-    }
-    //  White
-    else if (mode == 4)
-    {
+        digitalWrite(ledBright, LOW);
         digitalWrite(ledR, LOW);
         digitalWrite(ledG, LOW);
-        digitalWrite(ledB, LOW);
+        digitalWrite(ledB, HIGH);
+    }
+    //  Purple
+    else if (mode == 4)
+    {
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, HIGH);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, HIGH);
+    }
+    //  White
+    else if (mode == 5)
+    {
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, HIGH);
+        digitalWrite(ledG, HIGH);
+        digitalWrite(ledB, HIGH);
     }
 }
 void SetTempInput()
@@ -389,7 +406,7 @@ void SetLights()
             }
             if ((millis() - lastDebouneUp) > debounceDelay)
             {
-                if (LightMode != 4)
+                if (LightMode != 5)
                 {
                     LightMode += 1;
                     //  Print to 7 segment
@@ -453,6 +470,7 @@ void SetLights()
             Serial.println("EEPROM Store LightMode");
         }
     }
+    prevLight = LightMode;
     return;
 }
 void SetUnits()
@@ -669,8 +687,9 @@ void SetBrightness()
 void DoorLight()
 {
     LED(4);
-    while (door != HIGH)
+    if (debug == 1 || debug == 2)
     {
+        Serial.println("Door Open");
     }
 }
 bool TempCorrect()
@@ -1055,13 +1074,18 @@ void setup()
     pinMode(ledR, OUTPUT);
     pinMode(ledB, OUTPUT);
     pinMode(ledG, OUTPUT);
-    pinMode(speed, OUTPUT);
-    pinMode(direct, OUTPUT);
+    pinMode(ledBright, OUTPUT);
 
     // Turn all Off
-    digitalWrite(ledR, HIGH);
-    digitalWrite(ledG, HIGH);
-    digitalWrite(ledB, HIGH);
+    digitalWrite(ledBright, LOW);
+    digitalWrite(ledR, LOW);
+    digitalWrite(ledG, LOW);
+    digitalWrite(ledB, LOW);
+    // Turn on White if door is open
+    if (digitalRead(door) == HIGH)
+    {
+        DoorLight();
+    }
 
     // EEProm set temp recall
     // Checking if control digit is correct before reading the rest
@@ -1104,6 +1128,7 @@ void setup()
                 Serial.print("Preset Light = ");
                 Serial.println(presetL);
             }
+            LED(LightMode);
         }
         //  Read setpoint of units and check that it is in range before setting
         uint8_t presetU = hard.read(3);
@@ -1165,12 +1190,20 @@ void loop()
             MenuSelect();
         }
     }
-    if (digitalRead(door) == LOW)
+    if (digitalRead(door) == HIGH && doorWasOpen == 0)
     {
-        int prevLight = LightMode;
+        prevLight = LightMode;
         DoorLight();
-        LightMode = prevLight;
-        LED(LightMode);
+        doorWasOpen = 1;
+    }
+    else if (digitalRead(door) == LOW && doorWasOpen == 1)
+    {
+        doorWasOpen = 0;
+        LED(prevLight);
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("Door Closed");
+        }
     }
     //  Delay to Prevent Display overwrite
     delay(500);

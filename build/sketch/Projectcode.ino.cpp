@@ -20,7 +20,7 @@ volatile uint16_t eeTime;
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
 // LED Pins
-const int ledR = 26, ledB = 22, ledG = 24;
+const int ledR = 26, ledB = 22, ledG = 24, ledBright = 28;
 // Thermoelectric Control Pins
 const int RelayControl = 45;
 // Thermistor Pins
@@ -34,9 +34,6 @@ volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1, Brightness = 15;
 
 //  Global Time constants
 unsigned long time, previousMillis = 0;
-
-//  Thermoelectric Motor Driver pins
-const int speed = 0, direct = 0;
 
 //  Debounce for buttons Setup
 volatile int currentStateUp;     //  State of push button 1
@@ -61,6 +58,9 @@ unsigned long previousMillisMain = 0; // Stores the main was pressed
 //  Bool Flags for Temperature control
 volatile bool bang, cooling;
 
+//  Door
+volatile int prevLight;
+volatile bool doorWasOpen;
 //  Create an instance of the RGB object
 RGBLed led(ledR, ledG, ledB, RGBLed::COMMON_ANODE);
 
@@ -71,23 +71,23 @@ Adafruit_7segment sevseg = Adafruit_7segment();
 int GetTemp();
 #line 154 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void LED(int mode);
-#line 190 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 199 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetTempInput();
-#line 364 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 373 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetLights();
-#line 458 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 468 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetUnits();
-#line 558 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 568 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void SetBrightness();
-#line 669 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 679 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void DoorLight();
-#line 676 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 687 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 bool TempCorrect();
-#line 937 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 948 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void MenuSelect();
-#line 1045 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 1056 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void setup();
-#line 1140 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
+#line 1155 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 void loop();
 #line 67 "c:\\Users\\Owner\\Pictures\\VSCode\\seniordesignteam1\\Projectcode.ino"
 int GetTemp()
@@ -180,37 +180,46 @@ int GetTemp()
 void LED(int mode)
 {
     // //Turn all Off
-    // digitalWrite(ledR, HIGH);
-    // digitalWrite(ledG, HIGH);
-    // digitalWrite(ledB, HIGH);
+    digitalWrite(ledBright, LOW);
     //  Off Mode
     if (mode == 0)
     {
-        digitalWrite(ledR, HIGH);
-        digitalWrite(ledG, HIGH);
-        digitalWrite(ledB, HIGH);
+        digitalWrite(ledBright, HIGH);
+        digitalWrite(ledR, LOW);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, LOW);
     }
     //  Red
     else if (mode == 1)
     {
-        digitalWrite(ledR, LOW);
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, HIGH);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, LOW);
     }
     //  Green
     else if (mode == 2)
     {
-        digitalWrite(ledG, LOW);
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, LOW);
+        digitalWrite(ledG, HIGH);
+        digitalWrite(ledB, LOW);
     }
     //  Blue
     else if (mode == 3)
     {
-        digitalWrite(ledB, LOW);
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, LOW);
+        digitalWrite(ledG, LOW);
+        digitalWrite(ledB, HIGH);
     }
     //  White
     else if (mode == 4)
     {
-        digitalWrite(ledR, LOW);
-        digitalWrite(ledG, LOW);
-        digitalWrite(ledB, LOW);
+        digitalWrite(ledBright, LOW);
+        digitalWrite(ledR, HIGH);
+        digitalWrite(ledG, HIGH);
+        digitalWrite(ledB, HIGH);
     }
 }
 void SetTempInput()
@@ -479,6 +488,7 @@ void SetLights()
             Serial.println("EEPROM Store LightMode");
         }
     }
+    prevLight = LightMode;
     return;
 }
 void SetUnits()
@@ -695,8 +705,9 @@ void SetBrightness()
 void DoorLight()
 {
     LED(4);
-    while (door != HIGH)
+    if (debug == 1 || debug == 2)
     {
+        Serial.println("Door Open");
     }
 }
 bool TempCorrect()
@@ -1081,19 +1092,28 @@ void setup()
     pinMode(ledR, OUTPUT);
     pinMode(ledB, OUTPUT);
     pinMode(ledG, OUTPUT);
-    pinMode(speed, OUTPUT);
-    pinMode(direct, OUTPUT);
+    pinMode(ledBright, OUTPUT);
 
     // Turn all Off
-    digitalWrite(ledR, HIGH);
-    digitalWrite(ledG, HIGH);
-    digitalWrite(ledB, HIGH);
+    digitalWrite(ledBright, LOW);
+    digitalWrite(ledR, LOW);
+    digitalWrite(ledG, LOW);
+    digitalWrite(ledB, LOW);
+    // Turn on White if door is open
+    if (digitalRead(door) == HIGH)
+    {
+        DoorLight();
+    }
 
     // EEProm set temp recall
     // Checking if control digit is correct before reading the rest
     // Will only write values after first startup
     if (hard.read(5) == 8)
     {
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("Not first startup");
+        }
         //  Read setpoint of temp in Celcius and check that it is in range before setting
         uint8_t presetC = hard.read(0);
         if (presetC >= 0 && presetC <= 100)
@@ -1149,11 +1169,6 @@ void setup()
                 Serial.println(presetB);
             }
         }
-
-        if (debug == 1 || debug == 2)
-        {
-            Serial.println("Not first startup and read values");
-        }
     }
     // Switch control digit to designate that this is not the first startup
     hard.update(5, 8);
@@ -1192,12 +1207,20 @@ void loop()
             MenuSelect();
         }
     }
-    if (digitalRead(door) == LOW)
+    if (digitalRead(door) == HIGH && doorWasOpen == 0)
     {
-        int prevLight = LightMode;
+        prevLight = LightMode;
         DoorLight();
-        LightMode = prevLight;
-        LED(LightMode);
+        doorWasOpen = 1;
+    }
+    else if (digitalRead(door) == LOW && doorWasOpen == 1)
+    {
+        doorWasOpen = 0;
+        LED(prevLight);
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("Door Closed");
+        }
     }
     //  Delay to Prevent Display overwrite
     delay(500);
