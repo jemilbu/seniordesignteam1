@@ -30,7 +30,7 @@ volatile float SetTempC = 0, SetTempF = 32;
 volatile int LightMode = 0, UnitsMode = 1, prevUnit = 1, Brightness = 15;
 
 //  Global Time constants
-unsigned long time, previousMillis = 0;
+unsigned long time, previousMillis = 0, tempTime, tempOff;
 
 //  Debounce for buttons Setup
 volatile int currentStateUp;     //  State of push button 1
@@ -53,7 +53,7 @@ unsigned long int lastDebouneMain = 0; //the last time the output was toggled
 unsigned long previousMillisMain = 0; // Stores the main was pressed
 
 //  Bool Flags for Temperature control
-volatile bool bang, cooling;
+volatile bool bang, cooling, tempOn = 0, inDelay = 0;
 
 //  Door
 volatile int prevLight;
@@ -259,7 +259,7 @@ void SetTempInput()
                 if (UnitsMode == 1)
                 {
                     // Checking if SetTemp is in the useful range, changing if it is
-                    if (SetTempC != 80) // Celcius
+                    if (SetTempC != 37) // Celcius
                     {
                         SetTempC += 1;
                         //  If debug mode 1 or 2 enabled, print to serial port
@@ -282,7 +282,7 @@ void SetTempInput()
                 else if (UnitsMode == 2)
                 {
                     // Checking if SetTemp is in the useful range, changing if it is
-                    if (SetTempF != 176) // Farenheit
+                    if (SetTempF != 99) // Farenheit
                     {
                         SetTempF += 1;
                         if (debug == 1 || debug == 2)
@@ -468,6 +468,7 @@ void SetLights()
         if (debug == 1 || debug == 2)
         {
             Serial.println("EEPROM Store LightMode");
+            Serial.println(hard.read(2));
         }
     }
     prevLight = LightMode;
@@ -686,7 +687,7 @@ void SetBrightness()
 }
 void DoorLight()
 {
-    LED(4);
+    LED(5);
     if (debug == 1 || debug == 2)
     {
         Serial.println("Door Open");
@@ -699,257 +700,294 @@ bool TempCorrect()
     // Actual Function
     // This is where PI control could come into play
     // If setpoint is colder than measured, turn on cooling
-
-    //  If the units are °C
-    if (UnitsMode == 1)
+    //
+    if (tempOn == 0 && inDelay == 0)
     {
-        //  If the current temperature is above the set temperature
-        if ((Temp - SetTempC) >= 0.0)
+        tempTime = millis();
+        tempOn = 1;
+    }
+    //  If the unit has been on for less than 10 minutes
+    if ((millis() - tempTime) <= 600000 && tempOn == 1)
+    {
+        //  If the units are °C
+        if (UnitsMode == 1)
         {
-            //  Switch cooling flag to cooling
-            cooling = 1;
-            //  Show cooling on debug
-            if (debug == 1 || debug == 2)
+            //  If the current temperature is above the set temperature
+            if ((Temp - SetTempC) >= 0.0)
             {
-                Serial.println("Cooling");
-            }
-        }
-        //  If the current temperature is more than 5 °C below the set temperature
-        else if ((Temp - SetTempC) < -5.0)
-        {
-            //  Switch cooling flag to heating
-            cooling = 0;
-            //  Show heating on debug
-            if (debug == 1 || debug == 2)
-            {
-                Serial.println("Heating has been disabled");
-            }
-        }
-        else
-        {
-            //  Turn off the TEC
-            analogWrite(RelayControl, 0);
-            //  Show off on debug
-            if (debug == 1 || debug == 2)
-            {
-                Serial.println("Off");
-            }
-            return 0;
-        }
-        //  If cooling has been enabled
-        if (cooling == 1)
-        {
-            //  If we are above set temperature by 1 or have not reached the set temp yet
-            if (bang == false)
-            {
-                //  Turn on the TEC
-                analogWrite(RelayControl, 255);
-                //  If we go below the set point
-                if ((Temp - SetTempC) == -1.0)
+                //  Switch cooling flag to cooling
+                cooling = 1;
+                //  Show cooling on debug
+                if (debug == 1 || debug == 2)
                 {
-                    //  Switch the controller flag
-                    bang = true;
-                }
-                //  Show cooling to set point
-                if (debug == 1)
-                {
-                    Serial.println("Cooling Down to Setpoint-1");
+                    Serial.println("Cooling");
                 }
             }
-            //  If we are below the set point
-            else if (bang == true)
+            //  If the current temperature is more than 5 °C below the set temperature
+            else if ((Temp - SetTempC) < -5.0)
+            {
+                //  Switch cooling flag to heating
+                cooling = 0;
+                //  Show heating on debug
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Heating has been disabled");
+                }
+            }
+            else
             {
                 //  Turn off the TEC
                 analogWrite(RelayControl, 0);
-                //  If we are above the set point or have switched from heating
-                if ((Temp - SetTempC) == 1.0 || (Temp - SetTempC) >= 0.0)
+                //  Show off on debug
+                if (debug == 1 || debug == 2)
                 {
-                    bang = false;
+                    Serial.println("Off");
                 }
-                //  Show off until past set point
+                return 0;
+            }
+            //  If cooling has been enabled
+            if (cooling == 1)
+            {
+                //  If we are above set temperature by 1 or have not reached the set temp yet
+                if (bang == false)
+                {
+                    //  Turn on the TEC
+                    analogWrite(RelayControl, 255);
+                    //  If we go below the set point
+                    if ((Temp - SetTempC) == -1.0)
+                    {
+                        //  Switch the controller flag
+                        bang = true;
+                    }
+                    //  Show cooling to set point
+                    if (debug == 1)
+                    {
+                        Serial.println("Cooling Down to Setpoint-1");
+                    }
+                }
+                //  If we are below the set point
+                else if (bang == true)
+                {
+                    //  Turn off the TEC
+                    analogWrite(RelayControl, 0);
+                    //  If we are above the set point or have switched from heating
+                    if ((Temp - SetTempC) == 1.0 || (Temp - SetTempC) >= 0.0)
+                    {
+                        bang = false;
+                    }
+                    //  Show off until past set point
+                    if (debug == 1)
+                    {
+                        Serial.println("Turning Off until Setpoint +1");
+                    }
+                }
+            }
+
+            //  If heating has been enabled
+            if (cooling == 0)
+            {
+                // //  If we are above set temperature by 5 or have not reached the set temp yet
+                // if (bang == true)
+                // {
+                //     //  Turn on the TEC
+                //     analogWrite(RelayControl, 255);
+                //     analogWrite(ThermoElecB, 0);
+                //     //  If we go above the set point
+                //     if ((Temp - SetTempC) == 1.0)
+                //     {
+                //         //  Switch the controller flag
+                //         bang = false;
+                //     }
+                //     //  Show heating to set point
+                //     if (debug == 1)
+                //     {
+                //         Serial.println("Heating up to Setpoint +1");
+                //     }
+                // }
+                // //  If we are above the set point
+                // else if (bang == false)
+                // {
+                //     //  Turn off the TEC
+                //     analogWrite(RelayControl, 0);
+                //     analogWrite(ThermoElecB, 0);
+                //     //  If we are below the set point or have switched from cooling
+                //     if ((Temp - SetTempC) == -1.0 || (Temp - SetTempC) < -5.0)
+                //     {
+                //         bang = true;
+                //     }
+                //     //  Show off until past set point
+                //     if (debug == 1)
+                //     {
+                //         Serial.println("Turning Off until Setpoint -1");
+                //     }
+                // }
+                //  Turn off the TEC
+                analogWrite(RelayControl, 0);
+                //  Show off on debug
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Off");
+                }
+                return 0;
                 if (debug == 1)
                 {
-                    Serial.println("Turning Off until Setpoint +1");
+                    Serial.println("Heating Off");
                 }
             }
         }
-
-        //  If heating has been enabled
-        if (cooling == 0)
+        //  If the units are °F
+        if (UnitsMode == 2)
         {
-            // //  If we are above set temperature by 5 or have not reached the set temp yet
-            // if (bang == true)
-            // {
-            //     //  Turn on the TEC
-            //     analogWrite(RelayControl, 255);
-            //     analogWrite(ThermoElecB, 0);
-            //     //  If we go above the set point
-            //     if ((Temp - SetTempC) == 1.0)
-            //     {
-            //         //  Switch the controller flag
-            //         bang = false;
-            //     }
-            //     //  Show heating to set point
-            //     if (debug == 1)
-            //     {
-            //         Serial.println("Heating up to Setpoint +1");
-            //     }
-            // }
-            // //  If we are above the set point
-            // else if (bang == false)
-            // {
-            //     //  Turn off the TEC
-            //     analogWrite(RelayControl, 0);
-            //     analogWrite(ThermoElecB, 0);
-            //     //  If we are below the set point or have switched from cooling
-            //     if ((Temp - SetTempC) == -1.0 || (Temp - SetTempC) < -5.0)
-            //     {
-            //         bang = true;
-            //     }
-            //     //  Show off until past set point
-            //     if (debug == 1)
-            //     {
-            //         Serial.println("Turning Off until Setpoint -1");
-            //     }
-            // }
-            //  Turn off the TEC
-            analogWrite(RelayControl, 0);
-            //  Show off on debug
-            if (debug == 1 || debug == 2)
+            //  If the current temperature is above the set temperature
+            if ((Temp - SetTempF) >= 0.0)
             {
-                Serial.println("Off");
+                //  Switch cooling flag to cooling
+                cooling = 1;
+                //  Show cooling on debug
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Cooling");
+                }
             }
-            return 0;
-            if (debug == 1)
+            //  If the current temperature is more than 10 °F below the set temperature
+            else if ((Temp - SetTempF) < -10.0)
             {
-                Serial.println("Heating Off");
+                //  Switch cooling flag to heating
+                cooling = 0;
+                //  Show heating on debug
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Heating");
+                }
+            }
+            else
+            {
+                //  Turn off the TEC
+                analogWrite(RelayControl, 0);
+                //  Show off on debug
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Off");
+                }
+                return 0;
+            }
+            //  If cooling has been enabled
+            if (cooling == 1)
+            {
+                //  If we are above set temperature by 1 or have not reached the set temp yet
+                if (bang == false)
+                {
+                    //  Turn on the TEC
+                    analogWrite(RelayControl, 255);
+                    //  If we go below the set point
+                    if ((Temp - SetTempF) == -1.0)
+                    {
+                        //  Switch the controller flag
+                        bang = true;
+                    }
+                    //  Show cooling to set point
+                    if (debug == 1)
+                    {
+                        Serial.println("Cooling Down to Setpoint-1");
+                    }
+                }
+                //  If we are below the set point
+                else if (bang == true)
+                {
+                    //  Turn off the TEC
+                    analogWrite(RelayControl, 0);
+                    //  If we are above the set point or have switched from heating
+                    if ((Temp - SetTempF) == 1.0 || (Temp - SetTempF) >= 0.0)
+                    {
+                        bang = false;
+                    }
+                    //  Show off until past set point
+                    if (debug == 1)
+                    {
+                        Serial.println("Turning Off until Setpoint +1");
+                    }
+                }
+            }
+
+            //  If heating has been enabled
+            if (cooling == 0)
+            {
+                // //  If we are above set temperature by 5 or have not reached the set temp yet
+                // if (bang == true)
+                // {
+                //     //  Turn on the TEC
+                //     analogWrite(RelayControl, 255);
+                //     analogWrite(ThermoElecB, 0);
+                //     //  If we go above the set point
+                //     if ((Temp - SetTempF) == 1.0)
+                //     {
+                //         //  Switch the controller flag
+                //         bang = false;
+                //     }
+                //     //  Show heating to set point
+                //     if (debug == 1)
+                //     {
+                //         Serial.println("Heating up to Setpoint+1");
+                //     }
+                // }
+                // //  If we are above the set point
+                // else if (bang == false)
+                // {
+                //     //  Turn off the TEC
+                //     analogWrite(RelayControl, 0);
+                //     analogWrite(ThermoElecB, 0);
+                //     //  If we are below the set point or have switched from cooling
+                //     if ((Temp - SetTempF) == -1.0 || (Temp - SetTempF) < -5.0)
+                //     {
+                //         bang = true;
+                //     }
+                //     //  Show off until past set point
+                //     if (debug == 1)
+                //     {
+                //         Serial.println("Turning Off until Setpoint -1");
+                //     }
+                // }
+                //  Turn off the TEC
+                analogWrite(RelayControl, 0);
+                //  Show off on debug
+                if (debug == 1 || debug == 2)
+                {
+                    Serial.println("Off");
+                }
+                return 0;
+                if (debug == 1)
+                {
+                    Serial.println("Heating Off");
+                }
             }
         }
     }
-    //  If the units are °F
-    if (UnitsMode == 2)
+    else if ((millis() - tempTime) > 600000 && tempOn == 1)
     {
-        //  If the current temperature is above the set temperature
-        if ((Temp - SetTempF) >= 0.0)
+        tempOn = 0;
+        inDelay = 1;
+        tempOff = millis();
+        tempTime = millis();
+        //  Turn off the TEC
+        analogWrite(RelayControl, 0);
+        if (debug == 1)
         {
-            //  Switch cooling flag to cooling
-            cooling = 1;
-            //  Show cooling on debug
-            if (debug == 1 || debug == 2)
-            {
-                Serial.println("Cooling");
-            }
+            Serial.println("More than 10 minutes");
         }
-        //  If the current temperature is more than 10 °F below the set temperature
-        else if ((Temp - SetTempF) < -10.0)
+    }
+    else if (inDelay == 1 && tempOn == 0)
+    {
+        //  Turn off the TEC
+        analogWrite(RelayControl, 0);
+        if ((millis() - tempOff) >= 60000)
         {
-            //  Switch cooling flag to heating
-            cooling = 0;
-            //  Show heating on debug
-            if (debug == 1 || debug == 2)
-            {
-                Serial.println("Heating");
-            }
+            tempOn = 0;
+            inDelay = 0;
+            Serial.println("Flipping to Normal Operation");
         }
-        else
+        if (debug == 1)
         {
-            //  Turn off the TEC
-            analogWrite(RelayControl, 0);
-            //  Show off on debug
-            if (debug == 1 || debug == 2)
-            {
-                Serial.println("Off");
-            }
-            return 0;
-        }
-        //  If cooling has been enabled
-        if (cooling == 1)
-        {
-            //  If we are above set temperature by 1 or have not reached the set temp yet
-            if (bang == false)
-            {
-                //  Turn on the TEC
-                analogWrite(RelayControl, 255);
-                //  If we go below the set point
-                if ((Temp - SetTempF) == -1.0)
-                {
-                    //  Switch the controller flag
-                    bang = true;
-                }
-                //  Show cooling to set point
-                if (debug == 1)
-                {
-                    Serial.println("Cooling Down to Setpoint-1");
-                }
-            }
-            //  If we are below the set point
-            else if (bang == true)
-            {
-                //  Turn off the TEC
-                analogWrite(RelayControl, 0);
-                //  If we are above the set point or have switched from heating
-                if ((Temp - SetTempF) == 1.0 || (Temp - SetTempF) >= 0.0)
-                {
-                    bang = false;
-                }
-                //  Show off until past set point
-                if (debug == 1)
-                {
-                    Serial.println("Turning Off until Setpoint +1");
-                }
-            }
-        }
-
-        //  If heating has been enabled
-        if (cooling == 0)
-        {
-            // //  If we are above set temperature by 5 or have not reached the set temp yet
-            // if (bang == true)
-            // {
-            //     //  Turn on the TEC
-            //     analogWrite(RelayControl, 255);
-            //     analogWrite(ThermoElecB, 0);
-            //     //  If we go above the set point
-            //     if ((Temp - SetTempF) == 1.0)
-            //     {
-            //         //  Switch the controller flag
-            //         bang = false;
-            //     }
-            //     //  Show heating to set point
-            //     if (debug == 1)
-            //     {
-            //         Serial.println("Heating up to Setpoint+1");
-            //     }
-            // }
-            // //  If we are above the set point
-            // else if (bang == false)
-            // {
-            //     //  Turn off the TEC
-            //     analogWrite(RelayControl, 0);
-            //     analogWrite(ThermoElecB, 0);
-            //     //  If we are below the set point or have switched from cooling
-            //     if ((Temp - SetTempF) == -1.0 || (Temp - SetTempF) < -5.0)
-            //     {
-            //         bang = true;
-            //     }
-            //     //  Show off until past set point
-            //     if (debug == 1)
-            //     {
-            //         Serial.println("Turning Off until Setpoint -1");
-            //     }
-            // }
-            //  Turn off the TEC
-            analogWrite(RelayControl, 0);
-            //  Show off on debug
-            if (debug == 1 || debug == 2)
-            {
-                Serial.println("Off");
-            }
-            return 0;
-            if (debug == 1)
-            {
-                Serial.println("Heating Off");
-            }
+            Serial.println("Waiting for 1 minute");
         }
     }
 }
@@ -1077,15 +1115,15 @@ void setup()
     pinMode(ledBright, OUTPUT);
 
     // Turn all Off
-    digitalWrite(ledBright, LOW);
-    digitalWrite(ledR, LOW);
-    digitalWrite(ledG, LOW);
-    digitalWrite(ledB, LOW);
+    // digitalWrite(ledBright, LOW);
+    // digitalWrite(ledR, LOW);
+    // digitalWrite(ledG, LOW);
+    // digitalWrite(ledB, LOW);
     // Turn on White if door is open
-    if (digitalRead(door) == HIGH)
-    {
-        DoorLight();
-    }
+    // if (digitalRead(door) == HIGH)
+    // {
+    //     DoorLight();
+    // }
 
     // EEProm set temp recall
     // Checking if control digit is correct before reading the rest
@@ -1098,7 +1136,7 @@ void setup()
         }
         //  Read setpoint of temp in Celcius and check that it is in range before setting
         uint8_t presetC = hard.read(0);
-        if (presetC >= 0 && presetC <= 100)
+        if (presetC >= 0 && presetC <= 37)
         {
             SetTempC = presetC;
             if (debug == 1 || debug == 2)
@@ -1109,7 +1147,7 @@ void setup()
         }
         //  Read setpoint of temp in Farenheit and check that it is in range before setting
         uint8_t presetF = hard.read(1);
-        if (presetF >= 0 && presetF <= 100)
+        if (presetF >= 0 && presetF <= 99)
         {
             SetTempF = presetF;
             if (debug == 1 || debug == 2)
@@ -1120,14 +1158,16 @@ void setup()
         }
         //  Read setpoint of lights and check that it is in range before setting
         uint8_t presetL = hard.read(2);
-        if (presetL >= 0 && presetL <= 100)
+        if (presetL >= 0 && presetL <= 99)
         {
             LightMode = presetL;
             if (debug == 1 || debug == 2)
             {
+                Serial.println(hard.read(2));
                 Serial.print("Preset Light = ");
                 Serial.println(presetL);
             }
+            LED(0);
             LED(LightMode);
         }
         //  Read setpoint of units and check that it is in range before setting
@@ -1190,21 +1230,21 @@ void loop()
             MenuSelect();
         }
     }
-    if (digitalRead(door) == HIGH && doorWasOpen == 0)
-    {
-        prevLight = LightMode;
-        DoorLight();
-        doorWasOpen = 1;
-    }
-    else if (digitalRead(door) == LOW && doorWasOpen == 1)
-    {
-        doorWasOpen = 0;
-        LED(prevLight);
-        if (debug == 1 || debug == 2)
-        {
-            Serial.println("Door Closed");
-        }
-    }
+    // if (digitalRead(door) == HIGH && doorWasOpen == 0)
+    // {
+    //     prevLight = LightMode;
+    //     DoorLight();
+    //     doorWasOpen = 1;
+    // }
+    // else if (digitalRead(door) == LOW && doorWasOpen == 1)
+    // {
+    //     doorWasOpen = 0;
+    //     LED(prevLight);
+    //     if (debug == 1 || debug == 2)
+    //     {
+    //         Serial.println("Door Closed");
+    //     }
+    // }
     //  Delay to Prevent Display overwrite
     delay(500);
 }
