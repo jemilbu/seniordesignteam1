@@ -11,8 +11,8 @@ volatile uint16_t eeTime;
 //  Selecting Serial Output Type
 //#define debug 3   //  Data Output
 //#define debug 2 //  Only necassary Serial Print
-#define debug 1 //  All Serial Print
-//#define debug 0 //  No Serial Print
+//#define debug 1 //  All Serial Print
+#define debug 0 //  No Serial Print
 
 // Button Pins
 const int buttonUp = 40, buttonDown = 42, MainButton = 36;
