@@ -15,7 +15,7 @@ Develop a device that can control the temperature of an object placed inside. Th
 
 ## <a name="team-members"></a> Team Members
 <p align="center">
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Group_Picture.jpeg" alt="Group Picture of Senior Design Team 1" width="1040" height="550" />
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Group_Picture.jpeg" alt="Group Picture of Senior Design Team 1" width="1040" height="553" />
 <sub><i>Members from left to right: Jacob Milburn, Dane Cashion, Steven May, Emma Karber, Benjamin Snyder and Spencer McNerny</i></sub></p>
 
 * Jacob Milburn
