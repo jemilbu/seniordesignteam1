@@ -1,6 +1,6 @@
-Image of Fridge
+![Isometric Image of Cosmetic Mini Fridge](https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Fridge_ISO.png)
 # Code for Team 1 of Capstone Design, LLC. 
-
+<hr>
 
 ## Purpose of Project
 
