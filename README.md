@@ -1,9 +1,8 @@
 <h1 align="center">
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Fridge_ISO.png" alt="Isometric View of Cosmetic Mini Fridge" width="203" height="250" />
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Fridge_ISO.png" alt="Isometric View of Cosmetic Mini Fridge" width="405" height="500" />
 </h1>
 
-# Team 1 GitHub Repository 
-## Capstone Design, LLC. 
+# Team 1 GitHub Repository, Capstone Design, LLC. 
 <hr>
 
 ## <a name="purpose"></a>Purpose of Project
@@ -15,17 +14,21 @@ Develop a device that can control the temperature of an object placed inside. Th
 * [Code Objectives](#code-objectives)
 
 ## <a name="team-members"></a> Team Members
+<p align="center">
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Group_Picture.jpeg" alt="Group Picture of Senior Design Team 1" width="1040" height="550" />
+<sub><i>Members from left to right: Jacob Milburn, Dane Cashion, Steven May, Emma Karber, Benjamin Snyder and Spencer McNerny</i></sub></p>
+
 * Jacob Milburn
     * jemilbu@ksu.edu
     * (620) 899 - 8028
-* Steven May
-    * smmay@ksu.edu
 * Dane Cashion
     * danecashion@ksu.edu
-* Benjamin Snyder
-    * bensnyder@ksu.edu
+* Steven May
+    * smmay@ksu.edu
 * Emma Karber
     * elkarber@ksu.edu
+* Benjamin Snyder
+    * bensnyder@ksu.edu
 * Spencer McNerny
     * mcnerny@ksu.edu
 
@@ -33,7 +36,11 @@ Develop a device that can control the temperature of an object placed inside. Th
 #### Directions Given
 * The user should be provided means to easily set the temperature
 * The user should be provided a feedback of the current temperature
-#### Addded Functionality
+#### Added Functionality
 * The user will have the ability to change the color of the lights
 * The user will have the ability to change the units of the device
 * The user will have the ability to change the brightness of the display
+* The program will automatically store user inputs and will re-load them if power is lost
+* The program will monitor the time spent with the thermoelectric cooling unit on and will cycle the unit to improve efficiency
+* The program uses debounce delays on buttons to prevent jitter on input pin due to mechanical actuation 
+* The program will change the light to white if the door is opened
