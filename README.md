@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Fridge_ISO.png" alt="Isometric View of Cosmetic Mini Fridge" width="405" height="500" />
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Fridge_ISO.png" alt="Isometric View of Cosmetic Mini Fridge"/>
 </h1>
 
 # Team 1 GitHub Repository, Capstone Design, LLC. 
