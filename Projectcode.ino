@@ -1115,15 +1115,15 @@ void setup()
     pinMode(ledBright, OUTPUT);
 
     // Turn all Off
-    // digitalWrite(ledBright, LOW);
-    // digitalWrite(ledR, LOW);
-    // digitalWrite(ledG, LOW);
-    // digitalWrite(ledB, LOW);
-    // Turn on White if door is open
-    // if (digitalRead(door) == HIGH)
-    // {
-    //     DoorLight();
-    // }
+    digitalWrite(ledBright, LOW);
+    digitalWrite(ledR, LOW);
+    digitalWrite(ledG, LOW);
+    digitalWrite(ledB, LOW);
+    Turn on White if door is open
+    if (digitalRead(door) == HIGH)
+    {
+        DoorLight();
+    }
 
     // EEProm set temp recall
     // Checking if control digit is correct before reading the rest
@@ -1230,32 +1230,21 @@ void loop()
             MenuSelect();
         }
     }
-    // if (digitalRead(door) == HIGH && doorWasOpen == 0)
-    // {
-    //     prevLight = LightMode;
-    //     DoorLight();
-    //     doorWasOpen = 1;
-    // }
-    // else if (digitalRead(door) == LOW && doorWasOpen == 1)
-    // {
-    //     doorWasOpen = 0;
-    //     LED(prevLight);
-    //     if (debug == 1 || debug == 2)
-    //     {
-    //         Serial.println("Door Closed");
-    //     }
-    // }
+    if (digitalRead(door) == HIGH && doorWasOpen == 0)
+    {
+        prevLight = LightMode;
+        DoorLight();
+        doorWasOpen = 1;
+    }
+    else if (digitalRead(door) == LOW && doorWasOpen == 1)
+    {
+        doorWasOpen = 0;
+        LED(prevLight);
+        if (debug == 1 || debug == 2)
+        {
+            Serial.println("Door Closed");
+        }
+    }
     //  Delay to Prevent Display overwrite
     delay(500);
 }
-
-/*
-RGB LED
-https://github.com/wilmouths/RGBLed
-
-Motor Driver
-https://www.pololu.com/product-info-merged/2960
-
-Disp
-https://docs.broadcom.com/doc/AV02-0568EN
-*/
