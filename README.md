@@ -48,22 +48,16 @@ Develop a device that can control the temperature of an object placed inside. Th
 
 ## <a name="photo-album"></a> Photo Album
 <p align="center">
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/1-Prototyping.jpg" />
-  <sub><i>Prototyping the user inputs and temperature control system</i></sub>
-  
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/2-Control_Board.JPEG" />
-  <sub><i>Final control system and microcontroller assembled</i></sub>
-  
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/3-Insulation.JPG" />
-  <sub><i>Inside view of the insulation</i></sub>
-  
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/4-Control_and_Cooling_System.jpeg" />
-  <sub><i>Control and Cooling System installed in housing</i></sub>
-  
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/5-Backside.JPG" />
-  <sub><i>Rear view of completed prototype</i></sub>
-  
-  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/6-Front_Side_with_Light.JPG" />
-  <sub><i>Front view of completed prototype</i></sub>
-
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/1-Prototyping.jpg" /><br>
+  <sub><i>Prototyping the user inputs and temperature control system</i></sub><br>
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/2-Control_Board.JPEG" /><br>
+  <sub><i>Final control system and microcontroller assembled</i></sub><br>  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/3-Insulation.JPG" /><br>
+  <sub><i>Inside view of the insulation</i></sub><br>  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/4-Control_and_Cooling_System.jpeg" /><br>
+  <sub><i>Control and Cooling System installed in housing</i></sub><br>  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/5-Backside.JPG" /><br>
+  <sub><i>Rear view of completed prototype</i></sub><br>  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/6-Front_Side_with_Light.JPG" /><br>
+  <sub><i>Front view of completed prototype</i></sub><br>
 </p>
