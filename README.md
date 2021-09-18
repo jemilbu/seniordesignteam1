@@ -12,24 +12,25 @@ Develop a device that can control the temperature of an object placed inside. Th
 * [Purpose of Project](#purpose)
 * [Team Members](#team-members)
 * [Code Objectives](#code-objectives)
+* [Photo Album](#photo-album)
 
 ## <a name="team-members"></a> Team Members
 <p align="center">
   <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/assets/Group_Picture.jpeg" alt="Group Picture of Senior Design Team 1" />
 <sub><i>Members from left to right: Jacob Milburn, Dane Cashion, Steven May, Emma Karber, Benjamin Snyder and Spencer McNerny</i></sub></p>
 
-* Jacob Milburn
+* Jacob Milburn (Software and Control System Design)
     * jemilbu@ksu.edu
     * (620) 899 - 8028
-* Dane Cashion
+* Dane Cashion (CAD and Heat Transfer Design)
     * danecashion@ksu.edu
-* Steven May
+* Steven May (Team Lead and Documentation)
     * smmay@ksu.edu
-* Emma Karber
+* Emma Karber (Marketing and Documentation)
     * elkarber@ksu.edu
-* Benjamin Snyder
+* Benjamin Snyder (Hardware Design and Testing)
     * bensnyder@ksu.edu
-* Spencer McNerny
+* Spencer McNerny (Marketing and Manufacturing)
     * mcnerny@ksu.edu
 
 ## <a name="code-objectives"></a> Code Objectives
@@ -44,3 +45,25 @@ Develop a device that can control the temperature of an object placed inside. Th
 * The program will monitor the time spent with the thermoelectric cooling unit on and will cycle the unit to improve efficiency
 * The program uses debounce delays on buttons to prevent jitter on input pin due to mechanical actuation 
 * The program will change the light to white if the door is opened
+
+## <a name="photo-album"></a> Photo Album
+<p align="center">
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/1-Prototyping.jpg" />
+  <sub><i>Prototyping the user inputs and temperature control system</i></sub>
+  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/2-Control_Board.JPEG" />
+  <sub><i>Final control system and microcontroller assembled</i></sub>
+  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/3-Insulation.JPG" />
+  <sub><i>Inside view of the insulation</i></sub>
+  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/4-Control_and_Cooling_System.jpeg" />
+  <sub><i>Control and Cooling System installed in housing</i></sub>
+  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/5-Backside.JPG" />
+  <sub><i>Rear view of completed prototype</i></sub>
+  
+  <img src="https://github.com/jemilbu/seniordesignteam1/blob/main/Pictures/6-Front_Side_with_Light.JPG" />
+  <sub><i>Front view of completed prototype</i></sub>
+
+</p>
